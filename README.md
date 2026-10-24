@@ -56,6 +56,15 @@ mapping, audio configuration and the boot chain need separate integration.
 The board's separate `rocknix-joypad` controller module is not included.
 No prepared external-module build tree is installed.
 
+## Stock kernel packages
+
+`sys-kernel/rg-sp-anbernic-kernel-bin` (4.9.170) and
+`sys-kernel/rg-ds-plus-anbernic-kernel-bin` (6.1.141) package checksum-pinned,
+locally supplied vendor kernels, DTBs and selected matching Wi-Fi modules.
+They do not download vendor binaries or modify the boot setup. See the
+[local-input and licensing guide](docs/anbernic-stock-kernels.md) for extraction,
+installation and the unresolved stock-source/redistribution boundary.
+
 ## Sources and licensing
 
 See [the source and licensing inventory](docs/rg-ds-plus-rocknix-kernel.md) for
@@ -64,8 +73,8 @@ Our original ebuilds and support files use MIT; imported files retain
 their own notices. The top-level [LICENSE](LICENSE) does not replace those
 notices or grant rights to unrelated vendor firmware.
 
-Keep source archives alongside binary releases. For this package, the original
-Linux archive plus this overlay revision contains the source, patches,
+Keep source archives alongside ROCKNIX kernel binary releases. For that package,
+the original Linux archive plus this overlay revision contains the source, patches,
 configuration and build instructions needed to reproduce the packaged kernel.
 Use Portage's checksummed distfile cache for offline builds. A preserved copy
 of the original kernel archive is also attached to the Gitea source release.
