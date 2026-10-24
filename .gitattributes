@@ -1,0 +1,2 @@
+# Preserve imported source and patch context exactly; upstream-files.tsv checks it.
+sys-kernel/rg-ds-plus-rocknix-kernel/files/7.0.2/** -whitespace
