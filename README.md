@@ -56,6 +56,15 @@ mapping, audio configuration and the boot chain need separate integration.
 The board's separate `rocknix-joypad` controller module is not included.
 No prepared external-module build tree is installed.
 
+## RG SP compiled kernel and boot stack
+
+`sys-kernel/rg-sp-rocknix-kernel` builds Linux 7.2 with ROCKNIX's pinned
+H700 patches and RG SP board support. Companion packages
+`sys-boot/rg-sp-trusted-firmware-a` and `sys-boot/rg-sp-rocknix-u-boot`
+build BL31 and both H700 memory variants from source. The first hardware
+target is Gentoo boot and wired SSH. See the
+[build, licensing and image guide](docs/rg-sp-rocknix-kernel.md).
+
 ## Stock kernel packages
 
 `sys-kernel/rg-sp-anbernic-kernel-bin` (4.9.170) and

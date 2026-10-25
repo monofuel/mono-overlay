@@ -1,0 +1,12 @@
+This package builds TF-A's sun50i_h616 BL31 target.
+
+The included build-inputs.tar.xz preserves the complete copyright and license
+notices of the C, assembly and header files used by this build. It includes
+Arm/contributor BSD-3-Clause code, BSD-2-Clause libfdt, FreeBSD BSD-2-Clause
+and ISC libc routines, and LLVM compiler-rt builtins.
+
+The selected lib/compiler-rt/builtins files explicitly use
+Apache-2.0 WITH LLVM-exception. Those specific notices govern these files;
+the upstream general documentation's older NCSA/MIT summary does not apply
+to these selected builtins. The complete Apache license and LLVM exception
+are included alongside this notice.

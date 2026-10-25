@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <maintainer type="person">
+    <email>monofuel@monofuel.dev</email>
+    <name>Monofuel</name>
+  </maintainer>
+  <upstream>
+    <remote-id type="github">TrustedFirmware-A/trusted-firmware-a</remote-id>
+  </upstream>
+</pkgmetadata>

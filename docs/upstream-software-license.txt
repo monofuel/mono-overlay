@@ -1,3 +1,7 @@
+Verbatim software-license excerpt from ROCKNIX commit
+c445081a59518f37d9776e5412dd7b14910696f7:
+https://github.com/ROCKNIX/distribution/blob/c445081a59518f37d9776e5412dd7b14910696f7/README.md
+
 ### ROCKNIX Software
 
 Copyright (C) 2024-present [ROCKNIX](https://github.com/ROCKNIX)
