@@ -42,6 +42,11 @@ Gentoo-specific changes remove the embedded ROCKNIX initramfs and hostname
 placeholder, leave firmware external, and set a deterministic package-specific
 kernel release. `olddefconfig` resolves configuration for the selected compiler.
 No host-specific kernel flags or arbitrary warning suppressions are added.
+Revision `-r1` also installs a prepared module build tree under
+`/usr/src/linux-7.0.2-mono-rgdsplus-rocknix-r1/` and an absolute `build` link
+under its module directory, supporting merged-/usr systems. It retains the
+generated headers, module symbol versions and host build tools. The separate
+`sys-kernel/rocknix-joypad-0_p20261001` package builds against that exact tree.
 The Plus DTB retains upstream `unit_address_vs_reg` warnings for the two GPU
 `power_model` nodes. These are not corrected as part of preserving this source
 baseline; compiling the DTB is not a device-tree schema or hardware validation.
@@ -87,8 +92,38 @@ Those inputs need their own licenses and integration before a complete device
 image can be distributed. Kernel-source licensing does not cover those files.
 The Plus device tree references `rocknix-singleadc-joypad`; ROCKNIX supplies
 that controller driver through its separate `rocknix-joypad` package. It is
-not an in-tree module and is outside this first kernel package, as is the
+not an in-tree module and is outside this kernel package, as is the
 separate Mali module. This package does not claim complete runtime inputs.
+
+## Companion packages and runtime setup
+
+`sys-kernel/rocknix-joypad-0_p20261001` pins upstream commit
+`d02ed13aae08113f6f9e0e9d699cb29bb3450fa2`, selected by the same ROCKNIX
+release. Its source headers are GPL-2.0-or-later; the archive retains those
+notices and the Hardkernel/littleguy77 credits. Only
+`rocknix-singleadc-joypad.ko` is installed, under the exact `-r1` module release.
+Rebuild the companion whenever that kernel ABI/release changes.
+
+Use Gentoo's `sys-kernel/linux-firmware` with savedconfig selecting
+`rtw88/rtw8821c_fw.bin`, redistribution notices retained, and compression,
+initramfs and dist-kernel integration disabled. This kernel configuration
+does not enable compressed firmware loading.
+
+`sys-firmware/rg-ds-plus-aw88166-profile-20261001` installs a local, pinned
+profile as `aw88166_acf.bin`. Its SHA-256 is
+`3f8a6a7fdd2dd550de620caf51828b8d62385542d4aec47450b7e68ce9c23794`.
+These are the same bytes as the stock `aw883xx_acf.bin` and ROCKNIX's
+`extra-firmware` commit `88b363e67d4f730feb2c3124724d26dfaa88ce76`, path
+`RK3566/aw88166_acf.bin`. No redistribution grant is established for that
+payload: it is not in Git, is fetched locally, and has bindist/mirror/fetch
+restrictions. The ebuild's license does not relicense the binary.
+
+monorig's secret-free `tools/rg_ds_plus_kernel.nim` emits kernel-aware Wi-Fi,
+ALSA and launcher setup without reading Wi-Fi credentials. The stock kernel
+retains its original driver/audio path; `-r1` uses rtw88, the controller module
+and the mainline speaker card. mono-retro provides a separate
+`rg-ds-plus-rocknix` device profile. Boot preparation/activation/recovery are
+separate operations in monobake; package installation never writes the FIT.
 
 For kernel binary distribution, provide the exact corresponding source:
 original kernel archive, this overlay revision with all patches and config,

@@ -24,7 +24,16 @@ grep -Fxq 'CONFIG_DRM_PANFROST=m' "$artifacts/config"
 grep -Fxq 'CONFIG_RTW88_8821CS=m' "$artifacts/config"
 grep -Fxq 'CONFIG_USB_NET_AX88179_178A=y' "$artifacts/config"
 grep -Fxq 'CONFIG_EXT4_FS=y' "$artifacts/config"
-test ! -e "$modules/build" && test ! -L "$modules/build"
+if [[ $release == *-r0 ]]; then
+    test ! -e "$modules/build" && test ! -L "$modules/build"
+else
+    test -L "$modules/build"
+    test "$(readlink "$modules/build")" = "/usr/src/linux-$release"
+    build="$root/usr/src/linux-$release"
+    test -s "$build/Module.symvers"
+    test -s "$build/include/linux/input-polldev.h"
+    test "$(cat "$build/include/config/kernel.release")" = "$release"
+fi
 test ! -e "$modules/source" && test ! -L "$modules/source"
 
 for name in modules.dep modules.alias modules.dep.bin modules.alias.bin; do

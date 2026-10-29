@@ -4,7 +4,7 @@
 .PHONY: check check-package check-stock-package check-rg-sp-package
 
 check:
-	for script in sys-kernel/*/*.ebuild sys-boot/*/*.ebuild tests/*.sh tools/*.sh; do bash -n "$$script" || exit; done
+	for script in sys-kernel/*/*.ebuild sys-boot/*/*.ebuild sys-firmware/*/*.ebuild tests/*.sh tools/*.sh; do bash -n "$$script" || exit; done
 	for inventory in docs/*upstream-files.tsv; do awk -F '\t' 'NR > 1 { print $$3 "  " $$1 }' "$$inventory" | sha256sum -c - || exit; done
 	git diff --check
 
