@@ -8,7 +8,7 @@ was keeping Linux's FDT at `0x08200000`, separate from the vendor bootloader's
 tree at `0x08300000`. Initial tests that reused the vendor buffer stayed at
 the logo. The bootloader and DDR/BL31 firmware have not been replaced.
 
-Revision `-r3` passed the manual screen, buttons/stick, multitouch and speaker
+Revision `-r3` passed the manual screen, buttons/stick, touch and speaker
 tone tests on 2026-10-29, plus Wi-Fi/SSH and reboot/autostart checks. Its audio
 reference-count warnings are gone. USB Ethernet still had no observed link;
 charging, Bluetooth, suspend and microphone acceptance remain separate.
