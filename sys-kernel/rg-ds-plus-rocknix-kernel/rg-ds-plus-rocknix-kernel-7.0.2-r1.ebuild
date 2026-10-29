@@ -79,6 +79,8 @@ src_install() {
 	cp -a .config Makefile Kbuild Kconfig Module.symvers System.map \
 		include scripts "${build}/" || die
 	cp -a arch/arm64/Makefile arch/arm64/include "${build}/arch/arm64/" || die
+	# Drop references to architecture trees and documentation not included here.
+	find "${build}/scripts" -type l ! -exec test -e {} \; -delete || die
 	if [[ -f arch/arm64/kernel/module.lds ]]; then
 		cp -a arch/arm64/kernel/module.lds "${build}/arch/arm64/kernel/" || die
 	fi
