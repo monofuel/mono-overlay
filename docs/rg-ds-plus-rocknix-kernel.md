@@ -8,10 +8,18 @@ was keeping Linux's FDT at `0x08200000`, separate from the vendor bootloader's
 tree at `0x08300000`. Initial tests that reused the vendor buffer stayed at
 the logo. The bootloader and DDR/BL31 firmware have not been replaced.
 
-Hardware acceptance is incomplete: the first running test had corrupted display
-output, no observed USB Ethernet link, and audio-graph2 reference-count warnings.
-The experimental simplefb descriptor and launcher are being isolated from native
-DRM console operation. This is not yet a fully validated replacement kernel.
+Revision `-r3` passed the manual screen, buttons/stick, multitouch and speaker
+tone tests on 2026-10-29, plus Wi-Fi/SSH and reboot/autostart checks. Its audio
+reference-count warnings are gone. USB Ethernet still had no observed link;
+charging, Bluetooth, suspend and microphone acceptance remain separate.
+
+With this unit's stock bootloader, initial native display output still needs
+one normal fbdev power-down/unblank cycle (`4`, two-second wait, `0`) before
+starting the menu. That cleared both panels while leaving their clock rates
+and modes unchanged. A kernel-guarded OpenRC boot service in monorig performs
+the cycle independently of networking; reboot testing confirmed clean screens
+and automatic menu startup. The exact handoff fault remains unidentified.
+The panel protocol patch alone did not remove the need for this workaround.
 
 ## Source selection
 
@@ -97,7 +105,7 @@ packet classes, payloads and delays. Failed parsing/transfers now reach the
 existing prepare error path. Panel timings and regulator values are unchanged.
 The matching joypad revision is `0_p20261001-r2`. The full build, package/SDK/
 module checks, package QA scan and stock-sequence comparison pass. Physical
-display/audio validation of this revision is pending.
+acceptance is recorded above; it includes the separate boot/display setup.
 
 ## License inventory
 
