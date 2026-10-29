@@ -5,4 +5,7 @@
     <email>monofuel@monofuel.dev</email>
     <name>Monofuel</name>
   </maintainer>
+  <upstream>
+    <remote-id type="github">ROCKNIX/extra-firmware</remote-id>
+  </upstream>
 </pkgmetadata>

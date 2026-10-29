@@ -47,6 +47,11 @@ Revision `-r1` also installs a prepared module build tree under
 under its module directory, supporting merged-/usr systems. It retains the
 generated headers, module symbol versions and host build tools. The separate
 `sys-kernel/rocknix-joypad-0_p20261001` package builds against that exact tree.
+Unused dangling links into omitted architecture trees and documentation are
+removed. `pkgcheck` flags the absolute module-build link; it is intentional
+because the same binary package must work with merged-/usr and traditional
+`/lib` layouts. The original revision remains available as the initial artifact
+baseline, so `RedundantVersion` is also expected while both revisions remain.
 The Plus DTB retains upstream `unit_address_vs_reg` warnings for the two GPU
 `power_model` nodes. These are not corrected as part of preserving this source
 baseline; compiling the DTB is not a device-tree schema or hardware validation.
