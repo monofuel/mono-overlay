@@ -24,6 +24,9 @@ grep -Fxq 'CONFIG_DRM_PANFROST=m' "$artifacts/config"
 grep -Fxq 'CONFIG_RTW88_8821CS=m' "$artifacts/config"
 grep -Fxq 'CONFIG_USB_NET_AX88179_178A=y' "$artifacts/config"
 grep -Fxq 'CONFIG_EXT4_FS=y' "$artifacts/config"
+if [[ $release == *-r2 ]]; then
+    grep -Fxq 'CONFIG_FB_SIMPLE=y' "$artifacts/config"
+fi
 if [[ $release == *-r0 ]]; then
     test ! -e "$modules/build" && test ! -L "$modules/build"
 else

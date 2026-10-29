@@ -63,6 +63,15 @@ The Plus DTB retains upstream `unit_address_vs_reg` warnings for the two GPU
 `power_model` nodes. These are not corrected as part of preserving this source
 baseline; compiling the DTB is not a device-tree schema or hardware validation.
 
+Revision `-r2` enables `CONFIG_FB_SIMPLE=y` for an early console using the
+stock bootloader's existing logo scanout. It retains the DRM configuration
+and does not enable simpledrm, keeping native DRM device numbering unchanged.
+It needs a boot-time simple-framebuffer descriptor and a firmware-filled
+reserved-memory reference; monobake's `prepare-debug` supplies that descriptor.
+The matching controller package is `rocknix-joypad-0_p20261001-r1`, built for
+`7.0.2-mono-rgdsplus-rocknix-r2`. Kernel/module package checks and a QEMU
+simplefb smoke test pass; this does not establish a working physical boot.
+
 ## License inventory
 
 | Input | License basis | Handling |
