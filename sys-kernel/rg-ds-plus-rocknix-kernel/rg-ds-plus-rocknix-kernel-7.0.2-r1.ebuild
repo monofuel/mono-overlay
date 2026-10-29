@@ -13,6 +13,7 @@ S="${WORKDIR}/linux-${PV}"
 LICENSE="GPL-2"
 SLOT="${PV}"
 KEYWORDS="~arm64"
+RDEPEND="sys-apps/kmod"
 
 BDEPEND="
 	app-alternatives/bc
@@ -90,6 +91,8 @@ src_install() {
 }
 
 pkg_postinst() {
+	# Include separately packaged drivers when replacing the dependency indexes.
+	depmod -b "${EROOT:-/}" "${PV}-mono-rgdsplus-rocknix-${PR}" || die
 	elog "Kernel artifacts are in /usr/lib/${PN}/; modules are in /lib/modules/."
 	elog "Boot integration and hardware validation are separate; /boot was not changed."
 }

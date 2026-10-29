@@ -46,3 +46,6 @@ test "$(od -An -tx1 -j18 -N2 "$wifi" | tr -d ' \n')" = b700
 vermagic=$(modinfo -F vermagic "$wifi")
 test "${vermagic%% *}" = "$release"
 modprobe --dirname "$root" --set-version "$release" --show-depends rtw88_8821cs > /dev/null
+if [[ -f $modules/extra/rocknix-singleadc-joypad.ko ]]; then
+    modprobe --dirname "$root" --set-version "$release" --show-depends rocknix-singleadc-joypad > /dev/null
+fi
