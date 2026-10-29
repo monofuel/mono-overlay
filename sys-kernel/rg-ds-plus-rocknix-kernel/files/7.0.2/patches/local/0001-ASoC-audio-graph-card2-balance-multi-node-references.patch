@@ -1,0 +1,57 @@
+From: mono-overlay contributors
+Subject: [PATCH] ASoC: audio-graph-card2: balance multi-link node references
+
+The multi-port iterator consumes the supplied port reference. Do not put
+that original port again after advancing to a remote endpoint. The final
+port puts still release the separately acquired remote ports.
+
+Release each current remote endpoint before advancing the multi-link loop
+so replacing ep_cpu/ep_codec does not leak its reference.
+
+Observed on the RG DS Plus with Linux 7.0.2: audio-graph2's speaker probe
+triggers of_node_release and refcount underflow warnings. This is a local
+fix to GPL-2.0 kernel code, not a change imported from ROCKNIX.
+
+Upstream-Status: Pending
+SPDX-License-Identifier: GPL-2.0-only
+
+--- a/sound/soc/generic/audio-graph-card2.c
++++ b/sound/soc/generic/audio-graph-card2.c
+@@ -754,7 +754,6 @@
+ 	if (graph_lnk_is_multi(port_cpu)) {
+ 		multi_cpu_port = port_cpu;
+ 		ep_cpu = graph_get_next_multi_ep(&multi_cpu_port, multi_cpu_port_idx++);
+-		of_node_put(port_cpu);
+ 		port_cpu = ep_to_port(ep_cpu);
+ 	} else {
+ 		of_node_get(ep_cpu);
+@@ -764,7 +763,6 @@
+ 	if (graph_lnk_is_multi(port_codec)) {
+ 		multi_codec_port = port_codec;
+ 		ep_codec = graph_get_next_multi_ep(&multi_codec_port, multi_codec_port_idx++);
+-		of_node_put(port_codec);
+ 		port_codec = ep_to_port(ep_codec);
+ 	} else {
+ 		of_node_get(ep_codec);
+@@ -806,15 +804,19 @@
+ 	for_each_link_cpus(dai_link, i, dlc) {
+ 		dlc->ext_fmt = graph_parse_bitframe(ep_cpu);
+ 
+-		if (multi_cpu_port)
++		if (multi_cpu_port) {
++			of_node_put(ep_cpu);
+ 			ep_cpu = graph_get_next_multi_ep(&multi_cpu_port, multi_cpu_port_idx++);
++		}
+ 	}
+ 
+ 	for_each_link_codecs(dai_link, i, dlc) {
+ 		dlc->ext_fmt = graph_parse_bitframe(ep_codec);
+ 
+-		if (multi_codec_port)
++		if (multi_codec_port) {
++			of_node_put(ep_codec);
+ 			ep_codec = graph_get_next_multi_ep(&multi_codec_port, multi_codec_port_idx++);
++		}
+ 	}
+ 
+ 	/*** Don't use port_cpu / port_codec after here ***/

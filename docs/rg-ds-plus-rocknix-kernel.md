@@ -2,10 +2,16 @@
 
 ## Hardware status
 
-The package builds and installs, but its first FIT test with the stock bootloader
-did not reach a working system: the boot logo remained, with no SSH connection
-or Ethernet link lights. The verified stock FIT has been restored. Boot
-integration remains unresolved; this is not yet a known-working handheld kernel.
+The source-built `7.0.2-r2` kernel has booted Gentoo/OpenRC, mounted the SD
+root and connected to Wi-Fi with DHCP. The important boot integration change
+was keeping Linux's FDT at `0x08200000`, separate from the vendor bootloader's
+tree at `0x08300000`. Initial tests that reused the vendor buffer stayed at
+the logo. The bootloader and DDR/BL31 firmware have not been replaced.
+
+Hardware acceptance is incomplete: the first running test had corrupted display
+output, no observed USB Ethernet link, and audio-graph2 reference-count warnings.
+The experimental simplefb descriptor and launcher are being isolated from native
+DRM console operation. This is not yet a fully validated replacement kernel.
 
 ## Source selection
 
@@ -33,6 +39,10 @@ filenames within each group:
 2. `projects/ROCKNIX/packages/linux/patches/mainline-rockchip/`.
 3. `projects/ROCKNIX/packages/linux/patches/7.0/`.
 4. `projects/ROCKNIX/devices/RK3566/patches/linux/`.
+
+Revision `-r3` then applies this overlay's `patches/local/` after installing
+the copied generic panel driver and board device trees. These local patches
+are separate from the byte-identical ROCKNIX import inventory.
 
 Other selected patch locations are empty at this revision. In particular,
 `packages/linux/patches/rockchip/` belongs to the overridden generic recipe
@@ -72,6 +82,23 @@ The matching controller package is `rocknix-joypad-0_p20261001-r1`, built for
 `7.0.2-mono-rgdsplus-rocknix-r2`. Kernel/module package checks and a QEMU
 simplefb smoke test pass; this does not establish a working physical boot.
 
+Revision `-r3` adds the local GPL-2.0-only patch in `patches/local/` for
+audio-graph2 multi-link node ownership. The iterator already releases its input
+port; releasing that original port again caused the observed reference-count
+underflow. The patch removes the duplicate releases and releases each returned
+endpoint before replacing it during iteration. This patch is maintained here,
+not imported from ROCKNIX, and has not been claimed as an upstream-accepted fix.
+It also adds optional generic-DSI sequence writes and complete-sequence handling
+to the copied panel driver, selecting those options only in the Plus DTB.
+The vendor-register writes remain generic; sleep/display commands and the
+bottom-panel orientation command remain explicit DCS writes. An independent
+comparison against this unit's stock DTB verifies both compiled sequences'
+packet classes, payloads and delays. Failed parsing/transfers now reach the
+existing prepare error path. Panel timings and regulator values are unchanged.
+The matching joypad revision is `0_p20261001-r2`. The full build, package/SDK/
+module checks, package QA scan and stock-sequence comparison pass. Physical
+display/audio validation of this revision is pending.
+
 ## License inventory
 
 | Input | License basis | Handling |
@@ -85,6 +112,8 @@ simplefb smoke test pass; this does not establish a working physical boot.
 | Copied Plus/DS/RK2023 device trees | Explicit GPL-2.0-or-later OR MIT notices | Preserve both alternatives; use under GPLv2. |
 | Copied generic DSI panel driver | Explicit GPL-2.0 SPDX and GPL v2 module notice; ROCKNIX/Purism copyright notices | Preserve all notices. |
 | Generated kernel configuration | ROCKNIX software licensing statement; configuration data for its kernel build | Preserve the original file and document local configuration changes. |
+| Local audio-graph2 patch (`-r3`) | New changes to GPL-2.0 kernel code; GPL-2.0-only | Preserve the source notices and keep the local patch separate from imported ROCKNIX inputs. |
+| Local panel protocol patch (`-r3`) | New changes to the GPL-2.0 panel driver and GPL-2.0-or-later OR MIT board source, used under GPLv2 | Preserve original notices and apply as a separate GPL-2.0-only local patch. |
 | New ebuild, metadata, tests and documentation | MIT | Top-level LICENSE and source headers where appropriate. |
 
 This review covers the selected imported inputs, their new-file notices and

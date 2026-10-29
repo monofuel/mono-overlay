@@ -1,0 +1,202 @@
+From: mono-overlay contributors
+Subject: [PATCH] drm/panel: generic-dsi: preserve RG DS Plus init packet semantics
+
+The stock RG DS Plus panel description sends vendor-register sequences as
+MIPI generic writes and its final sleep/display commands as DCS writes.
+The generic panel driver currently sends every sequence as DCS. Add an
+optional global sequence type, retaining DCS by default for existing panels.
+Use the existing explicit dcs/data form for the Plus's final commands.
+
+Let descriptions declare a complete initialization sequence so the driver
+does not repeat display-on and exit-sleep after an already complete sequence.
+Preserve the stock 255 ms waits using this parser's hexadecimal spelling.
+
+Propagate failed transfers to prepare's existing error path and assert reset
+before disabling supplies. Payloads, lane count, mode flags, display timings
+and regulator settings remain unchanged.
+
+This is a local GPL-2.0-only modification to the ROCKNIX GPL-2.0 driver and
+the board's GPL-2.0-or-later OR MIT device tree, used under GPLv2.
+Upstream-Status: Pending
+SPDX-License-Identifier: GPL-2.0-only
+
+--- a/drivers/gpu/drm/panel/panel-generic-dsi.c
++++ b/drivers/gpu/drm/panel/panel-generic-dsi.c
+@@ -12,6 +12,7 @@
+ #include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
+ #include <linux/hex.h>
++#include <linux/kstrtox.h>
+ #include <linux/media-bus-format.h>
+ #include <linux/module.h>
+ #include <linux/firmware.h>
+@@ -77,6 +78,8 @@
+ 
+     enum drm_panel_orientation orientation;
+     bool prepared;
++    bool generic_seq;
++    bool init_complete;
+ };
+ 
+ 
+@@ -119,6 +122,17 @@
+             } else {
+                 dev_info(dev, "bad format %s\n", val);
+             }
++        } else if (strcmp(param, "sequence-type") == 0) {
++            if (strcmp(val, "generic") == 0)
++                ctx->generic_seq = true;
++            else if (strcmp(val, "dcs") == 0)
++                ctx->generic_seq = false;
++            else
++                return -EINVAL;
++        } else if (strcmp(param, "init-complete") == 0) {
++            int ret = kstrtobool(val, &ctx->init_complete);
++            if (ret < 0)
++                return ret;
+         } else if (strcmp(param, "lanes") == 0) {
+             if (get_option(&val, &dsi->lanes) == 0) {
+                 dev_info(dev, "bad lanes %s\n", val);
+@@ -241,14 +255,11 @@
+ 
+     switch (data[0]) {
+         case 'G':
+-            load_globals(data+1, dsi, ctx);
+-            break;
++            return load_globals(data+1, dsi, ctx);
+         case 'M':
+-            load_mode(data+1, dsi, ctx);
+-            break;
++            return load_mode(data+1, dsi, ctx);
+         case 'I':
+-            load_init_seq(data+1, dsi, ctx);
+-            break;
++            return load_init_seq(data+1, dsi, ctx);
+         default:
+             dev_info(NULL, "Unhandled %s\n", data);
+     }
+@@ -282,7 +293,11 @@
+             if (pos < size) pos++;
+             data[pos - 1] = 0;
+ 
+-            handle_line(data, dsi, ctx);
++            ret = handle_line(data, dsi, ctx);
++            if (ret < 0) {
++                release_firmware(fw);
++                return ret;
++            }
+ 
+             data = &data[pos];
+             size = size - pos;
+@@ -315,8 +330,10 @@
+             }
+ 
+             dev_dbg(dev, "desc[%ld]: %s", i, line);
+-            handle_line(buf, dsi, ctx);
++            ret = handle_line(buf, dsi, ctx);
+             kfree(buf);
++            if (ret < 0)
++                return ret;
+         }
+     }
+     return 0;
+@@ -368,12 +385,17 @@
+                 }
+             }
+         } else if (iseq->dcs == DCS_PSEUDO_CMD_SEQ) {
+-            ret = mipi_dsi_dcs_write_buffer(dsi, iseq->data, iseq->len);
++            if (ctx->generic_seq)
++                ret = mipi_dsi_generic_write(dsi, iseq->data, iseq->len);
++            else
++                ret = mipi_dsi_dcs_write_buffer(dsi, iseq->data, iseq->len);
+             dev_dbg(dev, "iseq 0x%px len=%d -> %d\n", (void*)iseq, iseq->len, ret);
+         } else {
+             ret = mipi_dsi_dcs_write(dsi, iseq->dcs, iseq->data, iseq->len);
+             dev_dbg(dev, "iseq %02x len=%d -> %d\n", iseq->dcs, iseq->len, ret);
+         }
++        if (ret < 0)
++            return ret;
+         if (iseq->wait) {
+             msleep(iseq->wait);
+         }
+@@ -460,16 +482,18 @@
+         goto disable_iovcc;
+     }
+ 
+-    ret = mipi_dsi_dcs_set_display_on(dsi);
+-    if (ret < 0) {
+-        dev_err(ctx->dev, "Failed to set display on: %d\n", ret);
+-        goto disable_iovcc;
+-    }
++    if (!ctx->init_complete) {
++        ret = mipi_dsi_dcs_set_display_on(dsi);
++        if (ret < 0) {
++            dev_err(ctx->dev, "Failed to set display on: %d\n", ret);
++            goto disable_iovcc;
++        }
+ 
+-    ret = mipi_dsi_dcs_exit_sleep_mode(dsi);
+-    if (ret < 0) {
+-        dev_err(ctx->dev, "Failed to exit sleep mode: %d\n", ret);
+-        goto disable_iovcc;
++        ret = mipi_dsi_dcs_exit_sleep_mode(dsi);
++        if (ret < 0) {
++            dev_err(ctx->dev, "Failed to exit sleep mode: %d\n", ret);
++            goto disable_iovcc;
++        }
+     }
+ 
+     msleep(ctx->delays.enable);
+@@ -481,6 +505,8 @@
+     return 0;
+ 
+ disable_iovcc:
++    if (ctx->enable_gpio) { gpiod_set_value_cansleep(ctx->enable_gpio, 0); }
++    gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+     regulator_disable(ctx->iovcc);
+ disable_vdd:
+     regulator_disable(ctx->vdd);
+--- a/arch/arm64/boot/dts/rockchip/rk3568-anbernic-rg-ds-plus.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3568-anbernic-rg-ds-plus.dts
+@@ -512,7 +512,7 @@
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&lcd0_rst>;
+ 		panel_description =
+-			"G size=87,66 delays=10,10,10,10,20 format=rgb888 lanes=2 flags=0xe03",
++			"G size=87,66 delays=10,10,10,10,20 format=rgb888 lanes=2 flags=0xe03 sequence-type=generic init-complete=1",
+ 
+ 			"M clock=62770 horizontal=1024,120,80,80 vertical=768,16,8,8 default=1",
+ 
+@@ -550,8 +550,8 @@
+ 			"I seq=300d",
+ 			"I seq=100c", "I seq=110c", "I seq=120c", "I seq=130c",
+ 			"I seq=3000",
+-			"I seq=1100 wait=255",
+-			"I seq=2900 wait=255";
++			"I dcs=11 data=00 wait=ff",
++			"I dcs=29 data=00 wait=ff";
+ 
+ 		port {
+ 			mipi_in_panel0: endpoint {
+@@ -592,7 +592,7 @@
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&lcd1_rst>;
+ 		panel_description =
+-			"G size=87,66 delays=10,10,10,10,20 format=rgb888 lanes=2 flags=0xe03",
++			"G size=87,66 delays=10,10,10,10,20 format=rgb888 lanes=2 flags=0xe03 sequence-type=generic init-complete=1",
+ 
+ 			"M clock=62770 horizontal=1024,120,80,80 vertical=768,16,8,8 default=1",
+ 
+@@ -630,9 +630,9 @@
+ 			"I seq=300d",
+ 			"I seq=100c", "I seq=110c", "I seq=120c", "I seq=130c",
+ 			"I seq=3000",
+-			"I seq=1100 wait=255",
+-			"I seq=3603",
+-			"I seq=2900 wait=255";
++			"I dcs=11 data=00 wait=ff",
++			"I dcs=36 data=03",
++			"I dcs=29 data=00 wait=ff";
+ 
+ 		port {
+ 			mipi_in_panel1: endpoint {
