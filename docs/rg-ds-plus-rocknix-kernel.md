@@ -1,5 +1,12 @@
 # RG DS Plus ROCKNIX kernel sources and licensing
 
+## Hardware status
+
+The package builds and installs, but its first FIT test with the stock bootloader
+did not reach a working system: the boot logo remained, with no SSH connection
+or Ethernet link lights. The verified stock FIT has been restored. Boot
+integration remains unresolved; this is not yet a known-working handheld kernel.
+
 ## Source selection
 
 - Kernel: upstream `linux-7.0.2.tar.xz`, from
