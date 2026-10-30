@@ -21,6 +21,43 @@ the cycle independently of networking; reboot testing confirmed clean screens
 and automatic menu startup. The exact handoff fault remains unidentified.
 The panel protocol patch alone did not remove the need for this workaround.
 
+## Comparison with the official ROCKNIX image
+
+The official ROCKNIX image has not been boot-tested on this device. These are
+observations from our Gentoo integration; they do not establish failures in
+the official image. Our kernel sources and imported patches are pinned to
+ROCKNIX, but the complete boot and userspace stacks differ.
+
+| Issue | Evidence from our setup | What remains unverified |
+| --- | --- | --- |
+| Boot stops at the logo | Separating Linux's FDT from the vendor bootloader's tree allowed Gentoo to boot. | Whether ROCKNIX's boot layout could encounter the same collision. This was a fault in our boot integration. |
+| Glitchy panels during startup | The blank/wait/unblank cycle clears both panels with the retained stock bootloader. | The underlying handoff fault, and whether the official image needs an equivalent workaround. The panel patch alone did not solve it. |
+| Panel initialization command semantics | The local patch preserves the packet classes, payloads and delays verified against this unit's stock DTB. | Whether the official image exhibits a visible failure without this patch. Our successful boot validates the combined setup, not the patch's necessity in every boot stack. |
+| Audio device-tree reference warnings | Speaker initialization triggered reference-count underflow warnings; the local ownership fix removed them. | Whether the official image produces the same warnings. The warnings did not establish that audio was unusable, so successful playback would not rule out the issue. |
+
+ROCKNIX's pinned [RK3566 U-Boot recipe][rocknix-uboot] builds U-Boot 2026.01
+with Rockchip DDR/BL31 inputs. We retained Anbernic's bootloader and firmware.
+Different inherited panel state and memory placement are possible explanations
+for different boot behavior, but have not been established as the cause of
+the remaining display handoff fault.
+
+The pinned [RK3566 options][rocknix-options] also select Wayland with Sway,
+whereas mono-retro opens DRM directly. Display ownership and initialization
+timing can therefore differ. This is a comparison point, not a demonstrated
+explanation for any specific failure.
+
+### Future bootloader investigation
+
+Using a ROCKNIX-built U-Boot boot chain is a future investigation. Keep the
+currently validated Anbernic boot chain and display workaround in place for
+now. Any later comparison needs its own recoverable test card and validation
+of memory placement, panel handoff and normal device operation. The ROCKNIX
+recipe still uses binary Rockchip DDR/BL31 firmware; its inputs and licenses
+need to be tracked separately from the U-Boot source.
+
+[rocknix-uboot]: https://github.com/ROCKNIX/distribution/blob/c445081a59518f37d9776e5412dd7b14910696f7/projects/ROCKNIX/devices/RK3566/packages/u-boot-Specific/package.mk
+[rocknix-options]: https://github.com/ROCKNIX/distribution/blob/c445081a59518f37d9776e5412dd7b14910696f7/projects/ROCKNIX/devices/RK3566/options
+
 ## Source selection
 
 - Kernel: upstream `linux-7.0.2.tar.xz`, from
