@@ -83,7 +83,9 @@ See the [installation, source and licensing guide](docs/libretro-melondsds.md).
 
 `games-emulation/libretro-monomelon` is the tuned variant, with CPU tile/sprite
 optimizations, internal-call optimization and optional PGO trained on existing
-open-source Nitro Engine demos. It installs alongside upstream.
+open-source Nitro Engine demos. Revision `1.4.0-r2` builds pinned commits from
+our melonDS and melonDS DS forks, which carry the source changes. It installs
+alongside upstream.
 See [monoMelon](docs/monomelon.md).
 
 ## Sources and licensing
@@ -91,8 +93,9 @@ See [monoMelon](docs/monomelon.md).
 See [the source and licensing inventory](docs/rg-ds-plus-rocknix-kernel.md) for
 the exact upstream revision, patch order, notices and excluded components.
 Our original ebuilds and support files use MIT; imported files retain
-their own notices. The monoMelon CPU-renderer patch and its reference test are
-GPL-3.0-or-later. The top-level [LICENSE](LICENSE) does not replace those
+their own notices. The historical monoMelon CPU-renderer patch and the engine
+fork's renderer changes/reference test are GPL-3.0-or-later. The top-level
+[LICENSE](LICENSE) does not replace those
 notices or grant rights to unrelated vendor firmware.
 
 Keep source archives alongside ROCKNIX kernel binary releases. For that package,

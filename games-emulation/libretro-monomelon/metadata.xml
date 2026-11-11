@@ -10,6 +10,6 @@
     <flag name="pgo">Train an instrumented core on the bundled open-source Nitro Engine demos and rebuild with PGO</flag>
   </use>
   <upstream>
-    <remote-id type="github">JesseTG/melonds-ds</remote-id>
+    <remote-id type="github">monofuel/melonds-ds</remote-id>
   </upstream>
 </pkgmetadata>

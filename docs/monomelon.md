@@ -1,12 +1,20 @@
 # monoMelon
 
-`games-emulation/libretro-monomelon` builds upstream melonDS DS 1.4.0 with
+`games-emulation/libretro-monomelon` builds melonDS DS 1.4.0 with
 `-fno-semantic-interposition` and optional profile-guided optimization (PGO).
 Revision `1.4.0-r1` also batches ARM64 background-tile rendering with NEON and
 skips sprite-priority passes that cannot draw anything. Other architectures
 retain scalar tile rendering; partial tiles and mosaic keep their scalar paths.
 It installs `monomelon_libretro.so` alongside the unmodified upstream package.
 The runtime libretro identity remains `melonDS DS` for frontend compatibility.
+
+Revision `1.4.0-r2` builds the same changes directly from the `master` branches
+of [our wrapper fork](https://github.com/monofuel/melonds-ds/tree/master) and
+[engine fork](https://github.com/monofuel/melonDS/tree/master). It applies no
+source patches in the ebuild. Both archives are pinned to full commit hashes;
+the wrapper's default engine pin matches the ebuild. Other dependency revisions,
+compiler settings and PGO training are unchanged. The older recipes and patches
+remain available for rollback.
 
 See [tweaks and measured performance](monomelon-performance.md) for each
 optimization's contribution and the Lost in Blue comparison on the RG DS Plus.
@@ -71,12 +79,13 @@ There are no commercial ROMs, private save states or Nintendo BIOS/firmware
 dumps in the training archive. Training notices are also installed under the
 package's documentation directory.
 
-The emulator, dependencies, two packaging patches, exact source revisions and
-source-preservation requirements match [the upstream package](libretro-melondsds.md).
-The additional CPU-renderer patch modifies the separately pinned melonDS engine.
-It is GPL-3.0-or-later, includes its new header's copyright notice, and is
-installed alongside the package's source references. Preserve it with the
-corresponding upstream archives when distributing binaries.
+Dependencies and source-preservation requirements follow
+[the upstream package](libretro-melondsds.md). For `r2`, preserve both fork
+archives, which contain the former build fixes and renderer patch, together
+with all other Manifest distfiles and this overlay revision. Installed
+`SOURCES.txt` identifies the wrapper and engine commits. The renderer and its
+reference test remain GPL-3.0-or-later with their existing copyright notices.
+For the older `r1`, preserve its installed renderer patch and upstream archives.
 The overlay's MIT license does not relicense the emulator's GPL code.
 Keep all Manifest distfiles and this overlay revision alongside binary releases.
 
@@ -98,16 +107,17 @@ warnings and retain ordinary optimization through `-fprofile-partial-training`.
 ## Validation and saves
 
 ```sh
-bash tests/check-monomelon-package.sh / lib64 libretro-monomelon-1.4.0-r1
+bash tests/check-monomelon-package.sh / lib64 libretro-monomelon-1.4.0-r2
 ```
 
-The tile helper has a deterministic scalar-reference test covering 6.4 million
+The [engine fork's tile test](https://github.com/monofuel/melonDS/tree/master/tests/monomelon)
+has a deterministic scalar-reference test covering 6.4 million
 pixels, including both palette depths, flips, all background layers, window
-masks and transparent indices. On ARM64, after applying the engine patch:
+masks and transparent indices. On ARM64, from the pinned engine source root:
 
 ```sh
-c++ -O2 -std=c++17 -I/path/to/patched/melonDS/src \
-  tests/test-monomelon-text-neon.cpp -o /tmp/test-monomelon-text-neon
+c++ -O2 -std=c++17 -Isrc \
+  tests/monomelon/test-text-neon.cpp -o /tmp/test-monomelon-text-neon
 /tmp/test-monomelon-text-neon
 ```
 

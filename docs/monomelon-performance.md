@@ -202,6 +202,38 @@ over the confirmed combination. GCC/Clang options, training inputs and renderer
 quality settings remain unchanged. The engine patch and its test are GPL-3+;
 the overlay's MIT packaging license does not relicense them.
 
+## Fork migration (`1.4.0-r2`)
+
+Revision `r2` moves the existing renderer changes into `monofuel/melonDS` and
+the two archive-build fixes into `monofuel/melonds-ds`. Both forks now expose
+the work on their default `master` branches. The ebuild pins engine commit
+`9cee6d4936cf70c677be9ee253650d6f1ecf417a` and wrapper commit
+`a4c263700dde5b2d4cd4af714a1b3e8a05708cba`; the engine pin is also contained
+in the history-preserving master merge. No new optimization is introduced.
+
+The effective renderer source matches packaged `r1` exactly. The wrapper's
+build files also match after accounting for the changed engine URL/pin. The
+fork's ARM64 test passes all 6.4 million reference pixels. Both cores produce
+identical complete video/PCM sequences in all three scenes, with 30 warmup
+and 120 checked frames. Flags, other dependencies and open-demo PGO training
+remain unchanged.
+
+Five alternating 360-frame runs per scene/build on the DS Plus, using both GPU
+displays and silent null audio, show equivalent performance:
+
+| Scene | r1 ms / speed | r2 ms / speed | Throughput change |
+| --- | ---: | ---: | ---: |
+| Overworld 1 | 20.4189 / 81.861% | 20.4344 / 81.799% | -0.076% |
+| Overworld 2 | 19.6389 / 85.112% | 19.6256 / 85.170% | +0.068% |
+| Inventory | 16.8072 / 99.452% | 16.8400 / 99.258% | -0.195% |
+
+The migration gate is no repeatable overworld regression exceeding 1%, plus
+matching output. These differences pass; they are not evidence of a new speedup.
+The packaged core SHA256 is
+`6d0d304dee9700e4a9d85149ea504177219481c7fddfdc7d4a43e5fb9ca51664`.
+Future performance changes belong in the forks, followed by new ebuild commit
+pins and fresh correctness/performance comparisons.
+
 ## Measurement and correctness
 
 ### Headless versus the player
