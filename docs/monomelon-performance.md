@@ -59,8 +59,9 @@ profile; it is not another optimization stacked on top of that profile.
 
 The open-demo trainer currently forces JIT fast memory off, whereas deployed
 playback enables it through the release default. Matching training to playback
-is an unmeasured follow-up candidate. The recorded performance gains below
-already include enabled fast memory during playback.
+was tested below and did not improve these workloads, so the shipped trainer
+retains its existing setting. The recorded performance gains already include
+enabled fast memory during playback.
 
 ## Improvement at each measured step
 
@@ -98,6 +99,57 @@ build takes 3.39% and 1.62% more time per frame than the private game-trained
 build in the two overworld scenes.
 
 ## Measurement and correctness
+
+### Headless versus the player
+
+A follow-up comparison uses the deployed open-trained core and the same three
+states, with two 360-frame runs per mode and reversed mode order. Headless runs
+are uncapped; they still request emulated video and audio. The capture mode adds
+the player's normal video/audio buffer capture, without presentation or playback.
+Player runs use both GPU displays, null audio, neutral input and disabled captures.
+All modes start at the same state without a warmup; output hashing is excluded
+from these timing runs.
+
+| Scene | Headless ms / speed | With buffer capture ms / speed | Full player ms / speed |
+| --- | ---: | ---: | ---: |
+| Overworld 1 | 19.598 / 85.29% | 19.906 / 83.97% | 21.221 / 78.77% |
+| Overworld 2 | 18.584 / 89.94% | 18.615 / 89.79% | 20.264 / 82.49% |
+| Inventory | 11.903 / 140.42% | 12.097 / 138.18% | 16.858 / 99.15% |
+
+The full player adds about **1.62–1.68 ms** per overworld frame over headless.
+This is an end-to-end difference that includes synchronization and contention,
+not a measurement of frontend CPU instructions alone. Eliminating the entire
+difference would improve throughput by about 8–9%, but the core still exceeds
+the 16.715 ms full-speed budget. Both frontend and emulator work remain relevant.
+Inventory's uncapped speed demonstrates spare core capacity there; the player
+intentionally paces it near 100%.
+
+### Training with fast memory enabled
+
+A separate two-stage Portage build changes only the trainer's fast-memory
+option to enabled. It uses the same sources, compiler settings and four demos;
+all four training runs pass under QEMU. Its complete video and PCM hashes match
+the deployed build in all three game states, using 30 warmup and 120 checked
+frames per state. No hashing runs inside the separate performance measurements.
+
+The performance comparison repeats each scene/mode/build three times for 360
+frames, changing variant and mode order on the middle pass. Both builds enable
+fast memory during playback. The table shows percent of normal game speed.
+
+| Scene | Existing PGO, headless | Fast-memory training, headless | Existing PGO, player | Fast-memory training, player |
+| --- | ---: | ---: | ---: | ---: |
+| Overworld 1 | 84.88% | 83.20% | 78.61% | 78.13% |
+| Overworld 2 | 89.66% | 89.42% | 82.75% | 82.42% |
+| Inventory | 140.63% | 139.54% | 99.40% | 99.41% |
+
+There is **no demonstrated performance gain**. Mean overworld throughput is
+0.62% / 0.39% lower in the player and 1.98% / 0.27% lower headless. These small
+differences do not establish a general regression from fast-memory training;
+they do not justify replacing the deployed build either. The original core,
+trainer and menu selection remain unchanged. No renderer or NEON changes are
+part of this experiment.
+
+### Deployment comparison method
 
 - RG DS Plus: RK3568, four Cortex-A55 cores; CPU frequency 1.992 GHz at every
   end-of-run sample. The kernel is the source-built ROCKNIX-derived 7.0.2 build.
