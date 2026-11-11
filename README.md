@@ -74,6 +74,13 @@ They do not download vendor binaries or modify the boot setup. See the
 [local-input and licensing guide](docs/anbernic-stock-kernels.md) for extraction,
 installation and the unresolved stock-source/redistribution boundary.
 
+## melonDS DS emulator core
+
+`games-emulation/libretro-melondsds` builds upstream melonDS DS 1.4.0 for
+libretro frontends such as mono-retro-player. It defaults to JIT and threaded
+software rendering, with checksum-pinned source archives and offline builds.
+See the [installation, source and licensing guide](docs/libretro-melondsds.md).
+
 ## Sources and licensing
 
 See [the source and licensing inventory](docs/rg-ds-plus-rocknix-kernel.md) for
