@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <maintainer type="person">
+    <email>monofuel@monofuel.dev</email>
+    <name>Monofuel</name>
+  </maintainer>
+  <use>
+    <flag name="jit">Enable the ARM64 or x86-64 dynamic recompiler</flag>
+    <flag name="pgo">Train an instrumented core on the bundled open-source Nitro Engine demos and rebuild with PGO</flag>
+  </use>
+  <upstream>
+    <remote-id type="github">JesseTG/melonds-ds</remote-id>
+  </upstream>
+</pkgmetadata>

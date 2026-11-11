@@ -1,7 +1,7 @@
 # Copyright 2026 mono-overlay contributors
 # SPDX-License-Identifier: MIT
 
-.PHONY: check check-package check-stock-package check-rg-sp-package check-melondsds-package
+.PHONY: check check-package check-stock-package check-rg-sp-package check-melondsds-package check-monomelon-package
 
 check:
 	for script in */*/*.ebuild tests/*.sh tools/*.sh; do bash -n "$$script" || exit; done
@@ -19,3 +19,6 @@ check-rg-sp-package:
 
 check-melondsds-package:
 	bash tests/check-melondsds-package.sh "$(ROOT)" "$(LIBDIR)"
+
+check-monomelon-package:
+	bash tests/check-monomelon-package.sh "$(ROOT)" "$(LIBDIR)"

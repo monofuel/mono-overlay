@@ -1,0 +1,21 @@
+Use the populated dependency paths instead of assuming FetchContent cloned them.
+This permits checksum-pinned archives to be provided by the package manager.
+
+--- a/cmake/FetchDependencies.cmake
++++ b/cmake/FetchDependencies.cmake
+@@ -60,7 +60,6 @@
+     fetch_dependency(tracy "https://github.com/wolfpld/tracy" "v0.14.1")
+ endif()
+ 
+-set(CMAKE_MODULE_PATH "${FETCHCONTENT_BASE_DIR}/melonds-src/cmake" "${FETCHCONTENT_BASE_DIR}/embed-binaries-src/cmake" "${CMAKE_MODULE_PATH}")
+ set(BUILD_STATIC ON)
+ set(BUILD_STATIC_LIBS ON)
+ set(BUILD_QT_SDL OFF)
+@@ -86,6 +85,7 @@
+     set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+ endif ()
+ FetchContent_MakeAvailable(melonDS libretro-common embed-binaries glm zlib libslirp pntr fmt yamc span-lite date)
++set(CMAKE_MODULE_PATH "${melonDS_SOURCE_DIR}/cmake" "${embed-binaries_SOURCE_DIR}/cmake" "${CMAKE_MODULE_PATH}")
+ 
+ if (TRACY_ENABLE)
+     set(BUILD_SHARED_LIBS OFF)

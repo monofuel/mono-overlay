@@ -1,5 +1,2 @@
-# Preserve imported source and patch context exactly; upstream-files.tsv checks it.
-sys-kernel/rg-ds-plus-rocknix-kernel/files/7.0.2/** -whitespace
-sys-kernel/rg-sp-rocknix-kernel/files/7.2/** -whitespace
-sys-boot/rg-sp-rocknix-u-boot/files/2026.01/** -whitespace
-games-emulation/libretro-melondsds/files/** -whitespace
+# Empty context lines in unified patches contain a required space.
+*.patch whitespace=-blank-at-eol

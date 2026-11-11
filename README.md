@@ -81,6 +81,10 @@ libretro frontends such as mono-retro-player. It defaults to JIT and threaded
 software rendering, with checksum-pinned source archives and offline builds.
 See the [installation, source and licensing guide](docs/libretro-melondsds.md).
 
+`games-emulation/libretro-monomelon` is the tuned variant, with internal-call
+optimization and optional PGO trained on existing open-source Nitro Engine
+demos. It installs alongside upstream. See [monoMelon](docs/monomelon.md).
+
 ## Sources and licensing
 
 See [the source and licensing inventory](docs/rg-ds-plus-rocknix-kernel.md) for
