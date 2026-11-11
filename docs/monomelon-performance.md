@@ -21,8 +21,12 @@ receive no separate improvement percentage here.
 monoMelon explicitly retains `-DNDEBUG` in CMake's Release flags to disable
 C/C++ assertions. The cross-build controls also use `NDEBUG`; its contribution
 relative to the installed Gentoo baseline was **not measured independently**.
-JIT, block size 32, disabled JIT fast memory, threaded software rendering and
-disabled LTO are shared test settings, rather than new gains claimed here.
+It also changes upstream's default for JIT fast memory: the recorded option
+values are disabled in the installed upstream build, and enabled in the cross
+controls and deployed monoMelon. Thus the control rebuild's difference includes
+this setting; it cannot be attributed solely to removing assertion overhead.
+JIT, block size 32, threaded software rendering and disabled LTO are shared
+test settings, rather than new gains claimed here.
 
 ### Internal-call optimization
 
@@ -52,6 +56,11 @@ Two training choices were tested:
 
 These are alternative PGO builds. Open-demo PGO replaces the game-trained
 profile; it is not another optimization stacked on top of that profile.
+
+The open-demo trainer currently forces JIT fast memory off, whereas deployed
+playback enables it through the release default. Matching training to playback
+is an unmeasured follow-up candidate. The recorded performance gains below
+already include enabled fast memory during playback.
 
 ## Improvement at each measured step
 
