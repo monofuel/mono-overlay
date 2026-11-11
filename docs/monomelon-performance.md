@@ -98,6 +98,61 @@ For example, 63.89% to 77.27% is about **13.38 percentage points**, or
 build takes 3.39% and 1.62% more time per frame than the private game-trained
 build in the two overworld scenes.
 
+## CPU-only follow-up
+
+The CPU-only follow-up keeps the source-built kernel, CPU frequency, JIT settings
+and GPU presentation path fixed. Each compiler candidate regenerates profiles
+from the same four open demos. All candidates match baseline video and PCM
+hashes in the three game states before performance testing.
+
+The following are headless throughput changes relative to each batch's matching
+deployed-core control, using three 360-frame runs per scene. Negative values
+mean slower. None justifies replacing the deployed compiler configuration.
+
+| Candidate | Overworld 1 | Overworld 2 |
+| --- | ---: | ---: |
+| GCC 16 O2 + PGO | -5.43% | -5.69% |
+| GCC 16 O3 + PGO + explicit LTO | -0.67% | -1.53% |
+| Hidden visibility | -1.99% | -0.20% |
+| Remove stack/fortify hardening | -2.84% | -2.15% |
+| Clang 22 O3 + PGO | -5.03% | -3.51% |
+| Clang 22 O3 + PGO + ThinLTO | -5.02% | -3.88% |
+
+GCC's explicit LTO experiment does build and pass correctness checks, despite
+the upstream GCC 15+ compiler-crash workaround that disables its CMake LTO
+options. It applies consistent compile/link flags and GCC archive tools.
+Clang uses a separately generated LLVM profile and matching ARM64 profile
+runtime. Compiler changes, hardening changes and visibility changes remain
+experiments; they are not shipped defaults.
+
+### Software-renderer prototypes
+
+Two independent ARM64 NEON prototypes retain exact integer colour arithmetic.
+The colour-compositing prototype matches 12.8 million scalar-reference pixels
+but is 1.36% / 1.73% slower headless, so it is rejected.
+
+The grouped background-tile prototype matches 6.4 million reference pixels and
+all three game video/PCM sequences. Its first headless comparison improves
+throughput 1.95% / 1.91%. A five-repeat full-player comparison improves
+throughput **1.52% / 1.72%**, reaching **80.17% / 83.77%** game speed versus
+**78.97% / 82.35%** in that batch's control. This remains below the chosen 2%
+promotion threshold; correctness alone is not a reason to deploy it.
+
+### Where CPU time remains
+
+Fresh profiles of the optimized core separate the main emulation thread from
+the 3D worker. Roughly 10–11% of total user CPU samples are generated JIT code;
+most samples remain in compiled emulator code. The emulation thread is almost
+continuously executing, with little runnable delay. Thread pinning changes
+player throughput by less than 1%, so no affinity policy is added.
+
+The 3D worker is also close to the full-speed frame budget. Improving only the
+main thread does not guarantee that rendering and presentation can sustain the
+target cadence. Existing threaded rendering is important: a diagnostic control
+with threading disabled falls from 85.01% to 49.17% in overworld 1.
+That comparison changes overlap and synchronization; its difference is not an
+exact measurement of renderer execution time.
+
 ## Measurement and correctness
 
 ### Headless versus the player
