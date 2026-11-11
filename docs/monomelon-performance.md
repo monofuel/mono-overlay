@@ -1,16 +1,19 @@
 # monoMelon tweaks and performance
 
-On the Anbernic RG DS Plus, monoMelon's open-demo PGO build improves Lost in
-Blue overworld throughput by **20–21%** over the installed upstream 1.4.0
-build. The measured scenes reach **77–82% of normal game speed**; inventory
-is near full speed. These measurements were collected on November 10–11, 2026.
+On the Anbernic RG DS Plus, monoMelon `1.4.0-r1` reaches **81–86% of normal
+Lost in Blue overworld speed**, with inventory near full speed. Its CPU-renderer
+patch improves throughput **3.6–3.9%** over the preceding open-demo PGO build in
+a paired comparison. The earlier compiler/PGO work improves throughput **20–21%**
+over upstream in its separate batch. These measurements were collected on
+November 10–11, 2026; full-speed overworld gameplay remains unresolved.
 
 ## What changed
 
 The emulator uses the same pinned upstream melonDS DS 1.4.0 sources and engine
 as [the upstream package](libretro-melondsds.md). The two existing CMake patches
-handle source-archive packaging. The performance work changes compiler settings
-and training, without changing emulated hardware behavior or rendering settings.
+handle source-archive packaging. The original performance work changes compiler
+settings and training. Revision `1.4.0-r1` also changes CPU-renderer code,
+described below. Neither changes emulated hardware behavior or rendering settings.
 
 ### CPU and release settings
 
@@ -153,6 +156,52 @@ with threading disabled falls from 85.01% to 49.17% in overworld 1.
 That comparison changes overlap and synchronization; its difference is not an
 exact measurement of renderer execution time.
 
+### CPU-renderer revision (`1.4.0-r1`)
+
+Two exact software-rendering changes are combined:
+
+- Group complete, non-mosaic background tiles into eight-pixel ARM64 NEON
+  operations. Palette lookup, transparent indices, window masks, pixel colour
+  expansion and upper/lower layer writes retain the scalar behavior. Partial
+  tiles and mosaic retain their original paths; other architectures use scalar
+  rendering throughout.
+- Track which sprite priorities received opaque pixels. Skip an interleave
+  pass when that priority cannot contribute. The mask is conservative: replaced
+  pixels may leave extra bits set, while mosaic only copies already covered
+  priorities. It resets with the sprite line buffer.
+
+The tile helper passes 6.4 million deterministic scalar-reference pixel cases.
+All three game scenes match complete video and PCM sequences. The sprite
+optimization alone is marginal; the combination improves the five-repeat
+prototype player comparison by **2.16% / 2.80%**, reaching **80.40% / 84.64%**
+game speed versus **78.70% / 82.34%** in the paired control.
+
+The deployment gate is at least **2% repeatable throughput gain in one
+overworld**, at most **1% regression in the other**, and matching output. This
+applies to the complete combination. The actual Portage-built revision passes
+an independent five-repeat comparison, 360 frames per scene/build, alternating
+build order. Both displays use GPU presentation and audio uses the null backend.
+Correctness hashing is separate: 30 warmup plus 120 checked frames per scene.
+
+| Scene | Control ms / speed | Packaged r1 ms / speed | Throughput gain |
+| --- | ---: | ---: | ---: |
+| Overworld 1 | 21.278 / 78.55% | 20.544 / **81.36%** | **3.57%** |
+| Overworld 2 | 20.294 / 82.37% | 19.529 / **85.59%** | **3.91%** |
+| Inventory | 16.832 / 99.30% | 16.806 / **99.46%** | 0.16% |
+
+The packaged core SHA256 is
+`2fd0d706c15712ddec294f276ab9c83b7727d82b0f7123cc8c20180641a30783`.
+Remaining overworld throughput requirements are approximately **23% / 17%**
+to reach 100%. These are gains needed from the new build, not percentage-point
+differences. Each batch has its own control; do not multiply historical batches
+to claim an exact end-to-end gain over upstream.
+
+The no-colour-target memcpy addition loses the tile gain, so it is excluded.
+A lower-bookkeeping, per-sprite priority mask also offers no measured advantage
+over the confirmed combination. GCC/Clang options, training inputs and renderer
+quality settings remain unchanged. The engine patch and its test are GPL-3+;
+the overlay's MIT packaging license does not relicense them.
+
 ## Measurement and correctness
 
 ### Headless versus the player
@@ -239,6 +288,6 @@ still defines `__gcov_*` instrumentation symbols; the installed-package check
 also rejects the instrumented prototype.
 
 See the [build and licensing guide](monomelon.md),
-[ebuild](../games-emulation/libretro-monomelon/libretro-monomelon-1.4.0.ebuild),
+[ebuild](../games-emulation/libretro-monomelon/libretro-monomelon-1.4.0-r1.ebuild),
 [Nim trainer](../games-emulation/libretro-monomelon/files/train.nim) and
 [open training release](https://github.com/monofuel/mono-overlay/releases/tag/monomelon-training-v1).

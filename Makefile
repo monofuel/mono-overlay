@@ -21,4 +21,4 @@ check-melondsds-package:
 	bash tests/check-melondsds-package.sh "$(ROOT)" "$(LIBDIR)"
 
 check-monomelon-package:
-	bash tests/check-monomelon-package.sh "$(ROOT)" "$(LIBDIR)"
+	bash tests/check-monomelon-package.sh "$(ROOT)" "$(LIBDIR)" "$(PF)"

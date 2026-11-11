@@ -2,6 +2,9 @@
 
 `games-emulation/libretro-monomelon` builds upstream melonDS DS 1.4.0 with
 `-fno-semantic-interposition` and optional profile-guided optimization (PGO).
+Revision `1.4.0-r1` also batches ARM64 background-tile rendering with NEON and
+skips sprite-priority passes that cannot draw anything. Other architectures
+retain scalar tile rendering; partial tiles and mosaic keep their scalar paths.
 It installs `monomelon_libretro.so` alongside the unmodified upstream package.
 The runtime libretro identity remains `melonDS DS` for frontend compatibility.
 
@@ -70,6 +73,10 @@ package's documentation directory.
 
 The emulator, dependencies, two packaging patches, exact source revisions and
 source-preservation requirements match [the upstream package](libretro-melondsds.md).
+The additional CPU-renderer patch modifies the separately pinned melonDS engine.
+It is GPL-3.0-or-later, includes its new header's copyright notice, and is
+installed alongside the package's source references. Preserve it with the
+corresponding upstream archives when distributing binaries.
 The overlay's MIT license does not relicense the emulator's GPL code.
 Keep all Manifest distfiles and this overlay revision alongside binary releases.
 
@@ -91,8 +98,22 @@ warnings and retain ordinary optimization through `-fprofile-partial-training`.
 ## Validation and saves
 
 ```sh
-bash tests/check-monomelon-package.sh / lib64
+bash tests/check-monomelon-package.sh / lib64 libretro-monomelon-1.4.0-r1
 ```
+
+The tile helper has a deterministic scalar-reference test covering 6.4 million
+pixels, including both palette depths, flips, all background layers, window
+masks and transparent indices. On ARM64, after applying the engine patch:
+
+```sh
+c++ -O2 -std=c++17 -I/path/to/patched/melonDS/src \
+  tests/test-monomelon-text-neon.cpp -o /tmp/test-monomelon-text-neon
+/tmp/test-monomelon-text-neon
+```
+
+The same test can be cross-compiled and run with a matching ARM64 QEMU sysroot.
+It checks the tile helper; whole-engine scroll, VRAM and sprite integration also
+need game-output comparisons. The performance guide records those comparisons.
 
 Changing the core changes mono-retro's save-state identity hash. Use a separate
 save directory and preserve the original core and states. For these same-engine

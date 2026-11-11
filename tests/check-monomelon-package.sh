@@ -4,10 +4,11 @@
 
 set -euo pipefail
 shopt -s nullglob
-root=${1:?Usage: check-monomelon-package.sh INSTALL_ROOT [LIBDIR]}
+root=${1:?Usage: check-monomelon-package.sh INSTALL_ROOT [LIBDIR] [PF]}
 libdir=${2:-lib64}
+package=${3:-libretro-monomelon-1.4.0-r1}
 core="$root/usr/$libdir/libretro/monomelon_libretro.so"
-docs="$root/usr/share/doc/libretro-monomelon-1.4.0"
+docs="$root/usr/share/doc/$package"
 test -s "$core"
 test -s "$root/usr/share/libretro/info/monomelon_libretro.info"
 for name in melondsds-LICENSE.txt SOURCES.txt; do
@@ -15,6 +16,11 @@ for name in melondsds-LICENSE.txt SOURCES.txt; do
     test "${#files[@]}" -eq 1
     test -s "${files[0]}"
 done
+if [[ $package == libretro-monomelon-1.4.0-r1 ]]; then
+    patches=("$docs/libretro-monomelon-1.4.0-cpu-renderer.patch"*)
+    test "${#patches[@]}" -eq 1
+    test -s "${patches[0]}"
+fi
 archives=("$docs"/licenses/libretro-common-source.tar.*)
 test "${#archives[@]}" -eq 1
 tar -tf "${archives[0]}" > /dev/null
