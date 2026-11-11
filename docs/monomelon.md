@@ -5,6 +5,9 @@
 It installs `monomelon_libretro.so` alongside the unmodified upstream package.
 The runtime libretro identity remains `melonDS DS` for frontend compatibility.
 
+See [tweaks and measured performance](monomelon-performance.md) for each
+optimization's contribution and the Lost in Blue comparison on the RG DS Plus.
+
 ## Install
 
 ```sh
