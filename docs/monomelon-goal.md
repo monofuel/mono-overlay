@@ -1,6 +1,6 @@
 # monoMelon goal
 
-Play **Lost in Blue at full speed on the Anbernic RG DS Plus**, through
+Play **Lost in Blue at full speed with at least 5% performance headroom on the Anbernic RG DS Plus**, through
 mono-retro-player, with melonDS's emulation and rendering accuracy preserved
 and an entirely open-source emulator/frontend stack.
 
@@ -10,15 +10,20 @@ performance reference; melonDS remains our accuracy baseline.
 
 ## What counts as done
 
-- All three saved outdoor scenes sustain the game's native **59.8261 frames/s**
-  (about **16.715 ms/frame**) in uncapped capacity tests. Inventory retains
-  full-speed capacity.
-- Normal playback maintains full game speed with clean audio and no recurring
+- **All four save states** sustain at least **105% processing capacity**:
+  **62.8174 frames/s**, or at most **15.919 ms of work per frame**. This includes
+  the cliff, river, menu and ocean, with no exception for the easier menu scene.
+- Normal playback stays paced at **100%**, the game's native **59.8261 frames/s**
+  (about **16.715 ms/frame**), with clean audio and no recurring
   hitches, tearing or growing input latency. Average FPS alone is insufficient.
+- Verify headroom for the emulator/frontend pipeline, including video and audio
+  work. Exclude intentional frame pacing and display-vsync waits when measuring
+  processing capacity; do not require a faster display mode. Headless core FPS
+  alone does not establish the whole pipeline's 5% margin.
 - Both physical displays update together, and controls, touchscreen, saves and
   save states continue working through the normal launcher/player.
 - Representative manual gameplay confirms overworld movement, inventory and
-  touch interactions; passing the three saved scenes alone is not completion.
+  touch interactions; passing the four saved scenes alone is not completion.
 - The result builds through the public ebuild from pinned, licensed sources
   without commercial ROMs, private states or game-trained PGO data as build inputs.
 
@@ -39,13 +44,14 @@ the new ocean scene's performance. Capture a fresh baseline for all four slots.
 `games-emulation/libretro-monomelon-1.4.0-r4` builds our engine and wrapper forks
 with the existing compiler, open-demo PGO, exact ARM64 rasterizer changes and
 batched 2D rendering on a worker. Its first three paired package runs measure
-**97.35% / 98.66% overworld speed**, with inventory near 100%. Closing that
-playback gap requires roughly **2.72% / 1.36% more throughput**, or
-**0.45 / 0.23 ms less per frame**. These are short neutral-input measurements;
-manual full-speed acceptance remains incomplete, especially around water.
+**97.35% / 98.66% overworld speed**, with inventory near 100%. These are short
+neutral-input measurements on the previous states, not evidence of the new
+105% capacity target. Manual full-speed acceptance remains incomplete,
+especially around water.
 
 Uncapped core capacity is **99.65% / 116.47%** in the overworlds, so scene 1
-also needs consistent core headroom. The former r3 baseline was
+also needs consistent core headroom. These core-only rates do not establish
+frontend headroom. The former r3 baseline was
 **82.58% / 86.47%** across ten paired runs per scene. Do not add improvement
 percentages from separate comparison batches.
 
