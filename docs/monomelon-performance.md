@@ -432,6 +432,69 @@ Automated audio stays silent, and installed binaries/save checks pass after
 each batch. Warmed averages, headless capacity and a scheduling improvement
 alone do not complete the full-speed, clean-audio and 5% buffer goal.
 
+### Compilation bursts and renderer-fence measurements
+
+A diagnostic build adds per-frame compilation and wait counters to the corrected
+combination. It uses fresh four-open-demo PGO; all four game and four demo
+video/PCM sequences match the non-instrumented control. Timings below are
+diagnostic attribution, not a candidate speed comparison. After 30 warm-up frames:
+
+| State | Mean JIT CPU time | Mean 2D fence wait | Mean 3D line wait |
+| --- | ---: | ---: | ---: |
+| Cliff | 0.122 ms | 0.796 ms | 0.043 ms |
+| River | 0.128 ms | 1.013 ms | 0.045 ms |
+| Menu | 0.008 ms | 1.167 ms | 0.035 ms |
+| Ocean | 0.099 ms | 1.506 ms | 0.200 ms |
+
+These costs overlap: compilation contains code emission, and 2D fences can
+overlap 3D line waits. They must not be added as exclusive frame costs.
+The large reproducible spikes compile many previously unseen blocks:
+
+- Cliff frame 44 compiles **242 blocks**, taking **8.834 ms of thread CPU time**;
+  code emission accounts for 5.303 ms of that. The complete core call uses
+  23.991 ms of CPU time.
+- River frame 100 compiles **244 blocks**, using 9.122 ms of CPU time.
+- Ocean frame 36 compiles **249 blocks**, using **9.361 ms of CPU time**,
+  including 5.562 ms in code emission. The complete call uses 23.909 ms of CPU.
+- Ocean frame 115 compiles no blocks but waits **8.139 ms at a 2D fence**.
+  Cliff frame 149 also has no compilation, so JIT work does not explain every
+  long frame.
+
+Giving only the 2D worker nice -10 does not consistently solve the problem.
+Two reversed-order ocean runs reduce the CPU/handoff service estimate's p95
+from 19.69/19.72 ms to 18.90/19.50 ms; emulation off-CPU time changes little.
+Reserving CPU 0 for emulation, with other owned player threads on CPUs 1–3,
+gives ocean p95 18.12/18.73 ms against its paired control's 19.74/19.74 ms.
+Cliff results vary. Neither policy meets the whole goal or persists after tests.
+The next fence diagnostic separates work still queued from the delay between
+the worker posting completion and emulation resuming.
+
+Diagnostic core SHA256:
+`f04653f7ea8d3f6277a4be64ec4d24a17e1e21d70e3de50b49cd96937febebe9`.
+Evidence: private `monomelon-frame-cost-20261112/{native-evidence.tar,cost-results.txt}`
+and `monomelon-present-20261112/{priority-2d-evidence.tar,priority-2d-results.txt,affinity-combined-evidence.tar,affinity-combined-results.txt}`.
+
+### r6 public source and package checkpoint
+
+The validated CPU changes are now in engine master
+[`a99475c0`](https://github.com/monofuel/melonDS/commit/a99475c08eb8f298dc9c0c10e31aba123633bafe),
+with wrapper master
+[`26975f1e`](https://github.com/monofuel/melonds-ds/commit/26975f1ee151bae485ec7c64bc58d88872a7580b)
+pinning that engine. The standalone CMake regression project passes scheduler,
+snapshot and 120-frame renderer tests on x86-64, plus actual emitted-dispatch
+tests on ARM64 under QEMU. The earlier corrected candidate also passes its
+three focused units natively. No diagnostic counters enter these sources.
+
+The new `1.4.0-r6` ebuild changes only source pins. A fresh build from public
+checksummed archives retains compiler flags, other dependencies and open-only PGO;
+ten compiled engine source hashes match the published checkout. Final core
+SHA256: `7e07d202a8a9e04dd2ac3447aea844f4f5b35e094e2da0a40ffd3d9d4377d92c`.
+Native package/ABI/dependency checks pass, all four game and four open-demo
+video/PCM sequences match, and all four 60-frame paired-display smokes pass.
+This package is not installed yet. Fresh package performance comparisons,
+deployment, frontend promotion and full goal acceptance remain separate work.
+Evidence is in private `monomelon-package-r6-20261112`.
+
 ## Earlier measurements
 
 On the Anbernic RG DS Plus, monoMelon `1.4.0-r4` reaches

@@ -30,6 +30,17 @@ display modes stay inline. State operations drain the worker and retain window
 carry. The fork includes differential renderer fixtures; the ebuild still uses
 pinned source archives and the same four open training demos.
 
+Revision `1.4.0-r5` adds ordered per-row polygon lists and three software 3D
+workers, preserving polygon order and retaining serial rendering for shadows.
+The workers use private buffers, and state changes wait for pending work.
+
+Revision `1.4.0-r6` caches scheduler deadlines and unchanged palette/OAM
+snapshots, uses eight-line 2D batches and adds shared AArch64 JIT dispatch tails.
+It retains block boundaries, invalidation checks and the original IRQ handling.
+The forks include standalone scheduler, snapshot, dispatch and renderer tests.
+Compiler flags, other dependency pins and the four open PGO workloads are unchanged.
+The measured CPU gains do not yet establish the full-speed/headroom goal.
+
 See [tweaks and measured performance](monomelon-performance.md) for each
 optimization's contribution and the Lost in Blue comparison on the RG DS Plus.
 

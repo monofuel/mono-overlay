@@ -63,11 +63,12 @@ full speed in the player. These short core-only and paced measurements do not
 establish whole-pipeline headroom. Representative manual acceptance is pending.
 Do not add improvement percentages from separate comparison batches.
 
-Private follow-ups improve uncapped core throughput by about 4–6% and overlap
-display rendering with the previous paired flip. Warmed core submissions average
-near the native cadence, but recurring long frames remain, particularly around
-ocean rendering and frame handoff. These candidates are not installed and have
-not demonstrated the complete pipeline's 5% buffer or manual acceptance.
+Follow-ups improve uncapped core throughput by about 4–6%; these CPU changes are
+published in the r6 ebuild, whose package is validated but not installed yet.
+Private frontend work overlaps display rendering with the previous paired flip.
+Warmed core submissions average near the native cadence, but recurring long
+frames remain: compilation bursts and 2D fences both contribute. Neither the
+complete pipeline's 5% buffer nor manual acceptance has been demonstrated.
 
 See [performance measurements and previous experiments](monomelon-performance.md)
 before proposing work. Compiler alternatives, frontend/core overlap and GPU
