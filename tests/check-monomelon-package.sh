@@ -6,7 +6,7 @@ set -euo pipefail
 shopt -s nullglob
 root=${1:?Usage: check-monomelon-package.sh INSTALL_ROOT [LIBDIR] [PF]}
 libdir=${2:-lib64}
-package=${3:-libretro-monomelon-1.4.0-r7}
+package=${3:-libretro-monomelon-1.4.0-r8}
 core="$root/usr/$libdir/libretro/monomelon_libretro.so"
 docs="$root/usr/share/doc/$package"
 test -s "$core"
@@ -21,7 +21,7 @@ if [[ $package == libretro-monomelon-1.4.0-r1 ]]; then
     test "${#patches[@]}" -eq 1
     test -s "${patches[0]}"
 fi
-if [[ $package == libretro-monomelon-1.4.0-r2 || $package == libretro-monomelon-1.4.0-r3 || $package == libretro-monomelon-1.4.0-r4 || $package == libretro-monomelon-1.4.0-r5 || $package == libretro-monomelon-1.4.0-r6 || $package == libretro-monomelon-1.4.0-r7 ]]; then
+if [[ $package == libretro-monomelon-1.4.0-r2 || $package == libretro-monomelon-1.4.0-r3 || $package == libretro-monomelon-1.4.0-r4 || $package == libretro-monomelon-1.4.0-r5 || $package == libretro-monomelon-1.4.0-r6 || $package == libretro-monomelon-1.4.0-r7 || $package == libretro-monomelon-1.4.0-r8 ]]; then
     wrapper=a4c263700dde5b2d4cd4af714a1b3e8a05708cba
     engine=9cee6d4936cf70c677be9ee253650d6f1ecf417a
     if [[ $package == libretro-monomelon-1.4.0-r3 ]]; then
@@ -39,6 +39,9 @@ if [[ $package == libretro-monomelon-1.4.0-r2 || $package == libretro-monomelon-
     elif [[ $package == libretro-monomelon-1.4.0-r7 ]]; then
         wrapper=85fbdd3f40a2d1586c34c70e8d23a739659cf85e
         engine=397f7d4d067ccc9e4e73a00128871422c5ed8fb0
+    elif [[ $package == libretro-monomelon-1.4.0-r8 ]]; then
+        wrapper=213e6eeab1e34e7f3d0e3ce871b511213fa1e120
+        engine=1b9c2121492f26709f29d709c1d43de8012e6d56
     fi
     sources=("$docs/SOURCES.txt"*)
     case ${sources[0]} in

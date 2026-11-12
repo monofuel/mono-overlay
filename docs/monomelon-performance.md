@@ -558,6 +558,40 @@ other foreground dependencies and cannot prove 105% whole-pipeline capacity.
 Normal physical audio and representative manual gameplay remain unverified.
 Evidence: `monomelon-package-r6-20261112/{deploy-evidence.tar,steady-evidence.tar,steady-180-results.txt}`.
 
+### r8 clipping fast acceptance
+
+Engine [`1b9c2121`](https://github.com/monofuel/melonDS/commit/1b9c2121492f26709f29d709c1d43de8012e6d56)
+avoids three clipping/copy passes when the processed vertices are already inside
+the view volume. It preserves colour rounding for all vertices, including strip
+reuse; outside/negative-W polygons use the original path. Wrapper
+[`213e6eea`](https://github.com/monofuel/melonds-ds/commit/213e6eeab1e34e7f3d0e3ce871b511213fa1e120)
+pins that engine. The r8 ebuild changes only source pins.
+
+The private candidate `f0b943c5…` passes the focused differential clipping test,
+the existing engine suite and all four native game/four open-demo video/PCM
+comparisons. Three rotating comparisons on the independently verified heavier
+river checkpoint use the same public-source lightweight-loop player, copied
+saves, null output and microphone disabled:
+
+| Core | Core time, mean ms | Player loop, mean ms / 600 frames | Underruns, total | Overruns, total |
+| --- | ---: | ---: | ---: | ---: |
+| r6 package | 15.6213 | 10,149.0 | 17 | 0 |
+| r7 package | 15.5001 | 10,138.7 | 10 | 1 |
+| r8 source candidate | 15.1534 | 10,101.3 | 3 | 1 |
+
+That is about 3.09% more core throughput than r6 in this batch. Each candidate
+player run has one underrun; the table does not establish clean physical audio
+or universal accuracy. The fresh public-source r8 package is building; it is not
+installed yet. Original saves and the microphone-enabled player remain intact.
+
+A private headroom stress test retains normal physical paired GPU output and
+audio queueing, adding about 0.796 ms to each core/main stage per frame, with a
+matching no-tax control. Initial warmed 600-frame windows pass cliff, river and
+inventory at native cadence without underruns; ocean and the heavier river have
+underruns under added stress. **The complete goal is still open.** This is an
+indirect stress test, not a direct measurement of uncapped work time. Neither
+the probe nor its artificial delays are part of shipped builds.
+
 ### r7 FIFO routing
 
 Engine [`397f7d4d`](https://github.com/monofuel/melonDS/commit/397f7d4d067ccc9e4e73a00128871422c5ed8fb0)
@@ -595,8 +629,11 @@ Player-loop means improve **10,153.7 to 10,111.7 ms** for 600 frames; underrun
 totals drop **13 to 4**, overruns **1 to 0**. Physical audio acceptance remains
 separate. Do not add gains from different batches.
 
-The fresh public-archive r7 package is still building and is **not installed**.
-The table measures the private candidate, not that unverified package. Core
+The fresh public-archive r7 package passes all eight native output comparisons
+and four normal-player smokes but is **not installed**. Two fresh-package pairs
+show a 1.51% heavy-river core gain, with one noisy player run (15 underruns versus
+one in its other run). The repeated three-way comparison above adds evidence.
+The earlier table measures the private candidate, not the fresh package. Core
 capacity alone does not satisfy the goal's 105% whole-pipeline requirement.
 A separate player test removes software pacing but keeps every core frame and
 normal presentation: overworld images change almost every frame, so actual
