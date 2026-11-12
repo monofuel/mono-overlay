@@ -464,6 +464,57 @@ and 0.545 seconds of frontend CPU: about 1.8 cores of a four-core device.
 Moving enough 2D work onto an idle core could help; the earlier per-scanline
 sprite worker shows why queue and synchronization costs must be measured.
 
+### Coarse 2D worker experiment against r3
+
+A private prototype queues complete HBlank records in batches of 16 through a
+32-slot ring. The main thread keeps register latches and VRAM coherence at their
+original emulated times. The worker uses shadow 2D engines, copied register/
+palette/OAM data and stable flattened VRAM. It drains before cache changes,
+3D restarts, state operations and presentation; capture and raw VRAM/FIFO display
+modes render inline. Window carry is merged before saving state.
+
+Fresh four-open-demo PGO, three alternating 360-frame pairs per scene/mode,
+same r3 control and player, no timed hashing:
+
+| Scene | r3 headless speed | Batched headless speed | r3 player speed | Batched player speed |
+| --- | ---: | ---: | ---: | ---: |
+| Overworld 1 | 88.94% | 100.80% | 82.74% | 95.69% |
+| Overworld 2 | 95.24% | 115.42% | 85.52% | 98.50% |
+| Inventory | 173.40% | 229.15% | 99.42% | 99.43% |
+
+Full-player overworld times fall **20.2028→17.4685 ms** and
+**19.5463→16.9694 ms**, throughput gains of **15.65% / 15.19%**. The prototype
+has full-speed headless capacity in these short tests, but **normal playback
+is not yet full speed**. Inventory remains intentionally paced.
+
+All three complete video/PCM sequences match r3 at batch sizes 0, 1, 4, 8 and
+16. A host differential matrix covers raster changes, VRAM remapping, capture,
+window carry, state operations, resets and thread settings: 100 seeds ×12
+frames plus named cases, with matching frame and full-GPU-state hashes across
+all tested batch sizes, threaded/serial modes and randomized worker pacing.
+Native ARM fixtures also match at batch sizes 0/1/8/16 and with threading
+disabled (10 seeds ×4 frames plus the named cases).
+
+The initial host mismatch came from an upstream uninitialized `CaptureEnable`
+flag, not the batching implementation: the first divergent state differed in
+that one byte, then unintended capture changed VRAM. The harness now sets a
+known initial flag and poisons allocations identically in both builds. This
+makes inputs repeatable; it does not detect every uninitialized read. Both
+reference and candidate report existing main/3D lifecycle races under host
+ThreadSanitizer. No report involves the new 2D worker in the small checked runs;
+this is not an exhaustive race-free result. Mid-frame lifecycle cases keep 3D
+off BG0 because the reference has nondeterministic 3D scanline-token behavior.
+
+Two further alternating pairs compare batch sizes 4/8/16. Player speeds are
+**96.03/96.09/96.38%** in overworld 1 and **98.67/98.55/98.63%** in overworld 2;
+smaller batches provide no clear playback win. The same artifact forced inline
+reaches only 80.70% / 84.77%, so snapshots alone are not the improvement.
+
+Artifact SHA256: `eb1ab307c76044d12b222dc5b0e803e99a5e41710cfa956dfa40a439f8fd1149`.
+Sources and test artifacts remain private pending final selection and packaging;
+installed r3, original saves, clocks and launcher remain unchanged. Further
+tests combine the earlier 3D candidate and vary ring capacity independently.
+
 ### Deferred perspective division against r3
 
 A private 3D candidate delays perspective-factor calculation until a pixel
