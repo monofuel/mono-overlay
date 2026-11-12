@@ -1,9 +1,13 @@
 # monoMelon goal
 
-Play **Lost in Blue at 100% speed in each of the four save states, with an extra
-5% performance buffer on the Anbernic RG DS Plus**, through
+Play **Lost in Blue at sustained 100% speed in all four save states, with an
+extra 5% processing headroom in every state on the Anbernic RG DS Plus**, through
 mono-retro-player, with melonDS's emulation and rendering accuracy preserved
 and an entirely open-source emulator/frontend stack.
+
+Every state must meet both targets independently: full-speed playback and
+105% processing capacity. Fast cliff/menu results cannot offset slow river/ocean
+results.
 
 Monofuel reports that the stock NNDDSS emulator runs the game at full speed on
 this device, but it is closed source and shows graphical issues. It provides a

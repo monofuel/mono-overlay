@@ -493,8 +493,8 @@ worker posts completion and when emulation returns from its wait:
 The first phase includes queued rendering, worker preemption and waits for 3D
 rows; it is not pure compute time. An ocean 6.169 ms fence includes 5.710 ms
 of 3D-line waiting, while another 4.202 ms fence includes only 0.044 ms of it.
-Thus a wakeup-only change cannot remove most fence latency. Smaller 2D batches
-are a candidate for reducing queued work, subject to output and performance tests.
+Thus a wakeup-only change cannot remove most fence latency. The smaller-batch
+comparison below tests whether reducing queued work helps.
 No new scheduling policy ships. Evidence:
 `monomelon-fence-phase-20261112/{native-evidence.tar,cost-results.txt}`; diagnostic
 core SHA256 `9089b9d69ec9b76d260a89580fa8236b2e6dca5d56d982fe21fa0ff368ac7489`.
@@ -519,6 +519,46 @@ video/PCM sequences match, and all four 60-frame paired-display smokes pass.
 This package is not installed yet. Fresh package performance comparisons,
 deployment, frontend promotion and full goal acceptance remain separate work.
 Evidence is in private `monomelon-package-r6-20261112`.
+
+### Smaller batches and remaining CPU candidates
+
+A same-binary comparison uses the exact r6 core above, changing only
+`MONOMELON_BATCH2D` from its default eight lines to four. All four saved
+video/PCM sequences match. Two alternating 240-frame pairs on cliff and ocean
+use the same private render-ahead player, normal GPU governor and scheduling:
+
+| State | Batch 8 service mean, two runs | Batch 4 service mean, two runs | Batch 8 p95 | Batch 4 p95 |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 16.060 / 15.768 ms | 16.175 / 16.008 ms | 17.658 / 16.593 ms | 17.341 / 18.207 ms |
+| Ocean | 16.175 / 15.747 ms | 16.151 / 16.080 ms | 20.190 / 18.311 ms | 20.560 / 19.972 ms |
+
+This service estimate includes core elapsed time, main-thread handoff and next
+dispatch delay; it excludes other foreground dependencies and is not a
+whole-pipeline capacity measurement. Four-line batches show no consistent win;
+the default remains eight. Six-line batches are untested. Evidence:
+`monomelon-package-r6-20261112/{batch4-evidence.tar,batch4-results.txt}`.
+
+A separate two-file prototype moves geometry FIFO writes ahead of unrelated
+register-switch cases. It retains the geometry-enable checks, write boundaries
+and per-word behavior. Fresh four-open-demo PGO passes; all four demo video/PCM
+outputs match r6 under ARM64 QEMU. The four saved game scenes also match the
+verified native control under desktop QEMU. Native performance is unmeasured,
+so this is not a promoted optimization. Private core SHA256:
+`31bcdd63e3b0931103f90d6a802c4df89dd9f719bad000545e180a33b98e8c15`;
+evidence: `monomelon-fifo-route-20261112/{build-evidence.tar,qemu-foss-evidence.tar,game-qemu-evidence.tar}`.
+
+An additional diagnostic counts queued scanlines and inline rendering caused by
+live-memory access, display capture or adaptive fallback. On desktop ARM64
+QEMU, all four saved scenes match the previously verified native video/PCM
+outputs. After 30 warm-up frames, every one of the following 120 frames queues
+192 scanlines, with no inline scanlines or adaptive fallback. Cliff frame 149
+also has no inline rendering or compilation. This weakens the inline-rendering
+hypothesis, but scheduling-dependent fallback still needs native confirmation;
+QEMU timings do not measure handheld performance. The known compilation bursts
+recur at cliff frame 44 (242 blocks), river frame 100 (244) and ocean frame 36
+(249). Diagnostic core SHA256:
+`2ddccd1cbec69143d77395e597a00c4f30ac79540ec023e918ad5458afed1b9d`.
+Evidence is in private `monomelon-inline-probe-20261112`.
 
 ## Earlier measurements
 
