@@ -372,9 +372,65 @@ entry points for indexed colour masks/texture buffers, GLES context negotiation
 in the wrapper and a hardware-render context in the host. Advertised extensions
 and linked shaders alone do not prove those paths work.
 
-The next GPU experiment should render through an isolated headless hardware
-context and compare real output/capacity before changing the normal player or
-launcher. No GPU-emulator speed or accuracy result is claimed by these probes.
+### Native GLES experiment (not installed)
+
+An isolated prototype now builds the actual core for GLES 3.1 and renders Lost
+in Blue through a small Nim surfaceless-EGL host. It uses pinned r3 source bases
+and private source overrides; it is not an available ebuild or a change to the
+normal player. This feasibility build has **no PGO**, unlike installed r3.
+The host waits for actual GPU completion, separates shader-compilation frames
+from emulated frames and rejects software fallback. Its normalized software
+video/PCM hashes match the existing benchmark in all three saved scenes.
+
+Getting real frames required more than the shader probes:
+
+- Fix GLES 3.1 feature/imported-target declarations and extension entry points.
+- Use GLES-compatible framebuffer operations and explicit output locations.
+- Convert desktop reversed-5551 uploads to supported GLES 5551 without losing
+  colour/alpha bits; convert RGBA8 capture readback back to DS words. The pure
+  packing arithmetic passes all 65,536 possible input words.
+- Restore the three tile-storage bindings before depth/compositing, including
+  empty scenes. A native backtrace placed the first crash inside Mesa at that
+  dispatch; rebinding the buffers fixes the observed crash.
+- Fix final six-to-eight-bit colour expansion: `(c << 2) | (c >> 4)`, rather
+  than `c >> 6`, which discarded the replicated low bits. This removes most
+  of the initial colour differences, but does not establish output equality.
+
+Three alternating 180-frame capacity runs per mode/scene, after 30 warmup
+frames, exclude screenshot readback and hashing. GPU runs use `glFinish` per
+frame, so they measure completed work rather than an expanding command queue:
+
+| Scene | Installed r3 software ms / speed | Experimental GPU ms / speed |
+| --- | ---: | ---: |
+| Overworld 1 | 18.4706 / 90.496% | 30.6005 / 54.624% |
+| Overworld 2 | 17.5036 / 95.495% | 27.3427 / 61.132% |
+| Inventory | 9.5197 / 175.584% | 13.6909 / 122.090% |
+
+These are **headless capacity**, not full-player measurements. The GPU column
+uses the pre-colour-fix prototype; a post-fix profiling run remains about
+54.5% in overworld 1. Single-run software controls using the same untrained
+GLES-enabled core reach **83.11% / 89.76% / 162.47%**, also faster than the GPU
+route. Do not attribute the whole difference to rendering: the installed
+software control has PGO, and the experimental renderers do not.
+
+The GPU's normal governor reaches its stock **800 MHz** maximum under load;
+no clocks/governors are changed. A six-second post-fix GPU profile records
+4.469 seconds of main-thread CPU, with additional GPU-completion waits.
+This implementation adds meaningful CPU-side work as well as GPU work.
+
+The untrained core's **software** mode preserves all three video/PCM sequences.
+Its GPU mode does not: scene 1 PCM matches, while scenes 2/3 have PCM differences
+with equal sample counts. RGB differences also remain after the colour fix;
+scene 1's first checked frame differs at 538/1,444 pixels on its two screens.
+Their causes are unresolved; no accuracy acceptance is claimed. These runs
+bootstrap the GPU renderer before importing the test state, which is another
+condition to investigate when comparing PCM.
+
+**Not promoted.** This proves a GLES compute/display port can render on the
+device; it does not provide a faster or validated replacement. The normal
+launcher/player, installed r3 core and original saves remain unchanged. GPU
+work remains possible, but this backend needs substantial performance and
+accuracy work. The immediate focus returns to the software core's critical path.
 
 ## Measurement and correctness
 
