@@ -224,6 +224,41 @@ Evidence: `monomelon-water-scenes-20261112/affinity-evidence.tar`,
 `monomelon-xbgr-20261112/native-evidence.tar` and
 `monomelon-pixel-copy-20261112/native-results.log`, all private experiment roots.
 
+### Scheduler and snapshot reuse experiments
+
+Two independent private candidates use the same r5 source baseline and fresh
+four-open-demo PGO. Both match all four current state and four open-demo video/PCM
+sequences. Three alternating 240-frame pairs include frontend video/audio capture
+in headless measurements and paired GPU displays with null audio in the player.
+Each column below compares against that candidate's own interleaved r5 control.
+
+| State | Scheduler core gain | Scheduler player gain | Snapshot core gain | Snapshot player gain |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 1.024% | 0.168% | 0.889% | -0.480% |
+| River | 0.118% | -0.652% | 0.443% | 0.349% |
+| Menu | 1.813% | 0.728% | -0.373% | 0.206% |
+| Ocean | -0.438% | 0.291% | 1.351% | -0.628% |
+
+The scheduler caches the earliest active event and skips no-due-event scans,
+retaining the original callback order and slice targets. Tests exercise actual
+callbacks, cancellation/rescheduling, periodic events, sleep, reset, save/load
+and 20,000 changing schedule/cancel/fire steps against the original scan's target.
+The fixture also passes against unmodified r5. Candidate SHA256:
+`bd77b6787cddef2ae360071b1581fd39a29c83ec5df64b35f5fb2c0997d6224f`.
+
+The snapshot candidate reuses each consumed ring slot's palette/OAM bytes until
+the existing dirty flags indicate guest writes, using generation counters.
+It adds no shared-buffer lifetime or pool mechanism. Existing complete-frame and
+serialized-state fixtures match r5 for batches 0/1/8/16, including mid-frame
+writes, capture, renderer changes and state/reset paths. Candidate SHA256:
+`692159f8f6294186955ad6cfe49b848c16b4f24df7ad09bf0b3b1d8151a09171`.
+
+Neither provides a convincing overall player improvement; both remain private
+and uninstalled. Small core-only gains do not justify claiming the playback gap
+is closed. Evidence in the respective private `monomelon-scheduler-20261112`
+and `monomelon-snapshot-20261112` roots includes `native-evidence.tar`,
+`results.txt`, changed-source checks and build logs.
+
 ## Earlier measurements
 
 On the Anbernic RG DS Plus, monoMelon `1.4.0-r4` reaches
