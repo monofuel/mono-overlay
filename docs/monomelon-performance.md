@@ -542,10 +542,24 @@ A separate two-file prototype moves geometry FIFO writes ahead of unrelated
 register-switch cases. It retains the geometry-enable checks, write boundaries
 and per-word behavior. Fresh four-open-demo PGO passes; all four demo video/PCM
 outputs match r6 under ARM64 QEMU. The four saved game scenes also match the
-verified native control under desktop QEMU. Native performance is unmeasured,
-so this is not a promoted optimization. Private core SHA256:
+verified native control under desktop QEMU. It subsequently passes all four
+native game and all four native demo comparisons. Three alternating 240-frame
+pairs use the same render-ahead player and normal CPU/GPU policies:
+
+| State | r6 core capacity | FIFO core capacity | r6 player speed | FIFO player speed |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 110.026% | 111.915% | 97.648% | 98.132% |
+| River | 114.619% | 117.854% | 97.976% | 98.096% |
+| Menu | 235.720% | 234.774% | 99.709% | 99.632% |
+| Ocean | 115.910% | 115.412% | 97.650% | 97.935% |
+
+The cliff/river core gains are 1.72%/2.82%, while ocean and menu do not improve.
+Player throughput gains remain below 0.5%. This is not promoted; it does not
+close the gap or establish the required headroom. CPU end samples remain
+1.992 GHz, temperatures stay below 59 C, and normal launcher/save/binary checks
+pass after the batch. Private core SHA256:
 `31bcdd63e3b0931103f90d6a802c4df89dd9f719bad000545e180a33b98e8c15`;
-evidence: `monomelon-fifo-route-20261112/{build-evidence.tar,qemu-foss-evidence.tar,game-qemu-evidence.tar}`.
+evidence: `monomelon-fifo-route-20261112/{build-evidence.tar,native-evidence.tar,results.txt,trace-results.txt}`.
 
 An additional diagnostic counts queued scanlines and inline rendering caused by
 live-memory access, display capture or adaptive fallback. On desktop ARM64
@@ -559,6 +573,18 @@ recur at cliff frame 44 (242 blocks), river frame 100 (244) and ocean frame 36
 (249). Diagnostic core SHA256:
 `2ddccd1cbec69143d77395e597a00c4f30ac79540ec023e918ad5458afed1b9d`.
 Evidence is in private `monomelon-inline-probe-20261112`.
+
+The same diagnostic now passes all four native game output comparisons and
+240-frame player traces. After 30 warm-up frames, all four scenes queue 192
+scanlines per frame, with zero inline, live-memory, capture or adaptive-fallback
+scanlines. Cliff frame 149 still compiles no blocks and draws no lines inline.
+Thus inline fallback is ruled out for these tested sequences. Queue-full waits
+recur, including two or three in some menu/ocean frames. This motivates a new
+64-slot-ring experiment against r6's 32 slots: the earlier negative ring64 test
+predates the current parallel 3D renderer. The candidate changes one constant,
+keeps eight-line batches and uses fresh open-demo PGO; no gain is assumed before
+native output and timing checks. Native diagnostic evidence:
+`monomelon-inline-probe-20261112/{native-evidence.tar,native-inline-results.txt}`.
 
 ## Earlier measurements
 
