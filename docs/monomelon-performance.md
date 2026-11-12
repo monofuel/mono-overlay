@@ -1,19 +1,19 @@
 # monoMelon tweaks and performance
 
-On the Anbernic RG DS Plus, monoMelon `1.4.0-r1` reaches **81–86% of normal
-Lost in Blue overworld speed**, with inventory near full speed. Its CPU-renderer
-patch improves throughput **3.6–3.9%** over the preceding open-demo PGO build in
-a paired comparison. The earlier compiler/PGO work improves throughput **20–21%**
-over upstream in its separate batch. These measurements were collected on
-November 10–11, 2026; full-speed overworld gameplay remains unresolved.
+On the Anbernic RG DS Plus, the installed monoMelon `1.4.0-r3` reaches
+**82.58% / 86.47% of normal Lost in Blue overworld speed**, with inventory near
+full speed. The earlier compiler/open-demo-PGO work improves throughput
+**20–21%** over its upstream control; `r1` adds **3.6–3.9%**, and `r3` adds
+**1.3–1.6%** in their separate paired comparisons. These are separate batches,
+not percentages to add together. Full-speed overworld gameplay remains unresolved.
 
 ## What changed
 
-The emulator uses the same pinned upstream melonDS DS 1.4.0 sources and engine
-as [the upstream package](libretro-melondsds.md). The two existing CMake patches
-handle source-archive packaging. The original performance work changes compiler
-settings and training. Revision `1.4.0-r1` also changes CPU-renderer code,
-described below. Neither changes emulated hardware behavior or rendering settings.
+The ebuild pins our engine and wrapper forks, based on melonDS DS 1.4.0.
+Source-archive CMake fixes and renderer changes live in those forks; older
+revisions carried them as ebuild patches. The original performance work changes
+compiler settings and training, followed by exact CPU-renderer changes in `r1`
+and `r3`. Emulated hardware behavior and rendering settings are preserved.
 
 ### CPU and release settings
 
@@ -306,7 +306,40 @@ Portage installation and all three migrated-state player smoke tests pass;
 original saves and previous cores remain preserved. Normal audio/gameplay
 acceptance remains a separate human check.
 
-### GLES compute feasibility
+### Scanline-cache experiment against r3
+
+A fresh steady player profile records 5.770 seconds of emulation-thread CPU,
+4.507 seconds of 3D-worker CPU and 0.535 seconds of frontend-thread CPU over
+six seconds. Listed 2D routines account for 11.06% of sampled user CPU work;
+this is not a measurement of time that caching could remove.
+
+An always-render diagnostic measures reuse of complete mode-zero 2D scanlines.
+Its conservative key covers registers, windows, sprite/mosaic results, background
+palette and changed VRAM contents. Sprite indices alone are insufficient:
+`InterleaveSprites` resolves their colours later. Comparing the entire sprite
+palette gives zero overworld hits because unused colours change. Comparing only
+colours used by visible sprites predicts **27.78% / 50.13%** bottom-screen row
+reuse, with no false predictions across 330 frames per scene. These diagnostic
+builds do not skip drawing, and their timings are not performance results.
+
+A separate prototype actually reuses those outputs, preserves window/mosaic
+side effects, and invalidates its cache on reset/state import. It receives fresh
+open-demo PGO and matches all three video/PCM sequences (30 warmup +120 checked
+frames). Three alternating 360-frame pairs per scene/mode show:
+
+| Scene | r3 player ms / speed | Cache player ms / speed | Player throughput change | Headless change |
+| --- | ---: | ---: | ---: | ---: |
+| Overworld 1 | 20.2056 / 82.725% | 21.4648 / 77.872% | -5.867% | -5.049% |
+| Overworld 2 | 19.2843 / 86.677% | 19.8250 / 84.313% | -2.728% | -3.409% |
+| Inventory | 16.8463 / 99.221% | 16.7815 / 99.605% | +0.386% | +5.528% |
+
+**Rejected; not installed.** The static inventory benefits uncapped, while both
+overworlds regress. CPU frequency stays at 1.992 GHz in the recorded samples;
+the device runs no concurrent compilation/probes during timing. This rules out
+this cache design, not every possible CPU optimization. The installed r3 core,
+launcher and original saves remain unchanged.
+
+### GLES renderer feasibility
 
 A [standalone surfaceless probe](https://github.com/monofuel/melonDS/blob/master/tests/monomelon/probe-compute-gles.cpp)
 compiles and links seven representative existing compute shader variants on
@@ -321,6 +354,27 @@ The existing engine/wrapper request desktop OpenGL, and the player currently
 lacks libretro hardware-context support. A GLES renderer port and host integration
 remain necessary. Shader compilation is a useful starting point, not a working
 GPU emulator.
+
+A follow-up surfaceless probe also compiles/links all seven display shader
+pairs: layer preprocessing, sprite preprocessing/rendering, 2D compositing,
+final output, capture and capture downscaling. It changes GLSL 140 to ES 310,
+declares high precision for the relevant numeric/sampler types, enables the
+advertised implicit-conversion extension and assigns explicit fragment-output
+locations. The first run identifies one missing signed-sampler precision
+declaration; adding it gives **14/14** passes including the seven compute variants.
+The shader algorithms remain unchanged.
+
+The device advertises `GL_EXT_draw_buffers_indexed` and reports 64 KiB uniform
+blocks, 105 uniform-buffer bindings, eight draw buffers and 16384-pixel maximum
+texture dimensions. Remaining integration includes desktop-only API calls
+(`glDrawBuffer`, `glFramebufferTexture`, fragment-output binding), extension
+entry points for indexed colour masks/texture buffers, GLES context negotiation
+in the wrapper and a hardware-render context in the host. Advertised extensions
+and linked shaders alone do not prove those paths work.
+
+The next GPU experiment should render through an isolated headless hardware
+context and compare real output/capacity before changing the normal player or
+launcher. No GPU-emulator speed or accuracy result is claimed by these probes.
 
 ## Measurement and correctness
 
