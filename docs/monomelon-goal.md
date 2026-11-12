@@ -1,6 +1,7 @@
 # monoMelon goal
 
-Play **Lost in Blue at full speed with at least 5% performance headroom on the Anbernic RG DS Plus**, through
+Play **Lost in Blue at full speed across all four save states, with at least
+5% performance headroom on the Anbernic RG DS Plus**, through
 mono-retro-player, with melonDS's emulation and rendering accuracy preserved
 and an entirely open-source emulator/frontend stack.
 
@@ -13,6 +14,7 @@ performance reference; melonDS remains our accuracy baseline.
 - **All four save states** sustain at least **105% processing capacity**:
   **62.8174 frames/s**, or at most **15.919 ms of work per frame**. This includes
   the cliff, river, menu and ocean, with no exception for the easier menu scene.
+  Each state must pass independently; averaging results across states does not count.
 - Normal playback stays paced at **100%**, the game's native **59.8261 frames/s**
   (about **16.715 ms/frame**), with clean audio and no recurring
   hitches, tearing or growing input latency. Average FPS alone is insufficient.
