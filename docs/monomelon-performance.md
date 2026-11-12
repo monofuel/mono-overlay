@@ -8,7 +8,7 @@ old slot-2 measurements are not river measurements. Fresh measurements follow.
 
 ## Current four-state measurements
 
-The installed r4 core is `7561e16dd677d7b28c92a1c512499eeaab62a7f191312deea08fac7bc541ef84`.
+The earlier r4 core is `7561e16dd677d7b28c92a1c512499eeaab62a7f191312deea08fac7bc541ef84`.
 Two 240-frame repeats per state/mode, reversing scene order on the second pass,
 give the following baseline. Automated playback uses copied saves, neutral
 input and null audio; output hashing is separate from timed runs.
@@ -120,7 +120,8 @@ Three alternating 240-frame pairs:
 
 These are separate batches from the two-worker comparison; small differences
 between their reported speeds are not a paired estimate of adding a worker.
-Neither candidate is installed or packaged yet.
+These private artifacts were not installed. The later r5 package combines the
+validated changes with unequal bands, as measured below.
 
 A separate 360-frame run after 30 warm-up frames enables the frontend's normal
 video and audio capture, with no display or audio output:
@@ -151,7 +152,8 @@ video/PCM sequences match:
 | Ocean | 89.880% | 93.693% | 4.243% | 111.551% |
 
 The ocean benefits, while cliff core headroom remains marginal. This is a
-runtime experiment, not a new shipped default or a complete solution.
+runtime experiment; r5 later makes 96/160 the default. Neither result establishes
+the full-speed goal.
 
 A private three-worker diagnostic times only the emulation thread's 2D fence
 and 3D frame-done waits. All four video/PCM sequences still match, and native
@@ -167,8 +169,60 @@ all removable 2D computation. There are about 1.3/1.6 fences per frame here.
 The remaining core elapsed time includes execution, callbacks and preemption.
 Different warm-up windows, diagnostic logging and fresh PGO prevent attributing
 the headless/player difference entirely to CPU contention. No diagnostic timing
-is a measured saving. A temporary CPU-placement experiment tests that hypothesis
-without changing the installed core or persistent system settings.
+is a measured saving.
+
+### Packaged r5: parallel software rendering
+
+`libretro-monomelon-1.4.0-r5` pins wrapper `e32810b0` and engine `b15171a3`.
+It combines ordered active-polygon row lists, three persistent 3D workers with
+96/160 row boundaries, shadow fallback and the renderer lifecycle fixes.
+Compiler settings, dependencies and four-open-demo PGO are unchanged.
+Fresh compilation uses 271 profile-use commands with coverage mismatches still
+treated as errors. Native synthetic tests and four game/four open-demo video
+and PCM comparisons pass; this covers those sequences, not every game feature.
+
+Core SHA256: `e4dcf23c4178475e36bd439ba29447f6bae2012b5410d5b80abffdb790fd4be1`.
+Three alternating 240-frame pairs against r4, using the current four states:
+
+| State | r4 player speed | r5 player speed | Player throughput gain | r5 core capacity |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 95.115% | 95.926% | 0.853% | 104.542% |
+| River | 83.494% | 96.705% | 15.822% | 110.902% |
+| Menu | 99.380% | 99.085% | -0.296% | 226.659% |
+| Ocean | 58.095% | 92.762% | 59.673% | 111.229% |
+
+The package is installed through Portage on the DS Plus. All four copied states
+are migrated through the core's serialization API and pass silent 60-frame
+smokes through the installed player. Original states/SRAM and the player binary
+remain unchanged. Normal playback uses `monomelon-parallel-lost-in-blue` saves;
+`mono-retro-lost-in-blue-before-parallel` retains the r4 core and its save folder.
+Manual gameplay acceptance of r5 remains pending. Core-only capacity and paced
+player speed do not prove the 105% whole-pipeline headroom requirement.
+
+Private evidence: `monomelon-package-r5-20261112/native-evidence.tar` and
+`results.txt`; verified pre-install backup `before-r5-backup.tar` has SHA256
+`e015373d1ff5b6e2c6f2f4108a2e51e5a7fd2c45d5512b7f6bf89f63f46ada9c`.
+
+### Follow-ups against parallel rendering
+
+- Reserving CPU0 for the emulation thread while restricting other player workers
+  to CPU1–3 gains 2.721% ocean throughput but loses 1.540% on the cliff across
+  three alternating pairs. River changes -0.234%. Rejected as a global policy;
+  no affinity setting persists.
+- A private XBGR output candidate matches all four video/PCM sequences with
+  both accepted native-format negotiation and rejected/standard fallback.
+  Full-player ocean throughput improves only 0.962%, cliff changes -0.199%
+  and river +0.582%; headless does not improve. Fresh PGO and training defaults
+  differ, so this comparison does not isolate the pixel format alone. Not promoted.
+- A native A55 copy microbenchmark checks bytes and guards for unaligned packed
+  256×384 frames. Row memcpy averages about 100 microseconds/frame, one bulk copy
+  97, inline NEON copy 114 and existing XRGB conversion 139. This isolates warm
+  memory copying, not callback latency or whole-player performance. Saving roughly
+  3 microseconds by combining rows is too small to prioritize over emulator work.
+
+Evidence: `monomelon-water-scenes-20261112/affinity-evidence.tar`,
+`monomelon-xbgr-20261112/native-evidence.tar` and
+`monomelon-pixel-copy-20261112/native-results.log`, all private experiment roots.
 
 ## Earlier measurements
 

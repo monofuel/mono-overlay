@@ -39,34 +39,28 @@ The current test set, updated during manual testing on November 12, is:
 - Slot 4: ocean; new.
 
 Monofuel reports cliff/menu feel full speed while river/ocean water effects
-cause noticeable slowdowns. Fresh r4 measurements of these four states are:
+cause noticeable slowdowns. The installed r5 package's three paired 240-frame
+measurements of these four states are:
 
 | State | Uncapped core capacity | Paced player speed |
 | --- | ---: | ---: |
-| Cliff | 98.38% | 97.48% |
-| River | 85.58% | 85.11% |
-| Menu | 229.72% | 99.30% |
-| Ocean | 59.25% | 58.38% |
+| Cliff | 104.54% | 95.93% |
+| River | 110.90% | 96.71% |
+| Menu | 226.66% | 99.09% |
+| Ocean | 111.23% | 92.76% |
 
-These are two 240-frame repeats per mode, with neutral input and silent test
-audio. Player results include intentional pacing, and therefore do not measure
-the 105% capacity target. The ocean's 3D worker is the critical path: roughly
-27.7 ms of thread CPU time per frame, versus 13.5 ms main and 6.3 ms 2D.
-These thread timings include cleanup and are not isolated function timings.
+These use neutral input and silent test audio. Player results include intentional
+pacing and therefore do not measure the 105% capacity target. r5 adds ordered
+polygon row lists and three-worker software 3D rendering to r4's batched 2D
+worker, preserving the existing compiler settings and open-demo PGO. Against
+r4 in the same batch, river/ocean player throughput improves 15.82%/59.67%.
+The emulation thread and its remaining 2D fences now warrant investigation;
+the older single-worker ocean profile is no longer the current critical path.
 
-`games-emulation/libretro-monomelon-1.4.0-r4` builds our engine and wrapper forks
-with the existing compiler, open-demo PGO, exact ARM64 rasterizer changes and
-batched 2D rendering on a worker. Its earlier three paired package runs measure
-**97.35% / 98.66% overworld speed**, with inventory near 100%. These are short
-neutral-input measurements on the previous states, not evidence of the new
-105% capacity target. Manual full-speed acceptance remains incomplete,
-especially around water.
-
-Uncapped core capacity is **99.65% / 116.47%** in the overworlds, so scene 1
-also needs consistent core headroom. These core-only rates do not establish
-frontend headroom. The former r3 baseline was
-**82.58% / 86.47%** across ten paired runs per scene. Do not add improvement
-percentages from separate comparison batches.
+Cliff core capacity still falls short of 105%, and neither water scene sustains
+full speed in the player. These short core-only and paced measurements do not
+establish whole-pipeline headroom. Representative manual acceptance is pending.
+Do not add improvement percentages from separate comparison batches.
 
 See [performance measurements and previous experiments](monomelon-performance.md)
 before proposing work. Compiler alternatives, frontend/core overlap and GPU
