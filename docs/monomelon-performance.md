@@ -516,9 +516,47 @@ ten compiled engine source hashes match the published checkout. Final core
 SHA256: `7e07d202a8a9e04dd2ac3447aea844f4f5b35e094e2da0a40ffd3d9d4377d92c`.
 Native package/ABI/dependency checks pass, all four game and four open-demo
 video/PCM sequences match, and all four 60-frame paired-display smokes pass.
-This package is not installed yet. Fresh package performance comparisons,
-deployment, frontend promotion and full goal acceptance remain separate work.
+Initial package validation precedes the timing and deployment described below.
+Frontend promotion and full goal acceptance remain separate work.
 Evidence is in private `monomelon-package-r6-20261112`.
+
+After charging, three fresh alternating pairs compare this exact package with
+installed r5, using the same private render-ahead trace player for both:
+
+| State | r5 core capacity | r6 core capacity | r5 player speed | r6 player speed |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 103.296% | 108.721% | 97.202% | 98.163% |
+| River | 109.199% | 115.077% | 98.152% | 98.255% |
+| Menu | 219.892% | 234.642% | 99.725% | 99.678% |
+| Ocean | 108.825% | 114.894% | 95.566% | 97.404% |
+
+The package improves core throughput by **5.25–6.71%**. Player measurements
+include startup and the final physical flip; they do not measure 5% processing
+headroom. Across the three runs, null-backend audio underruns fall from 14 to
+zero at the cliff and from 19 to three at the ocean; menu and river stay at
+zero. These counters do not replace listening to normal audio. Both variants
+use the same experimental frontend, so the table does not establish performance
+through the installed launcher's existing presenter. Original/live saves and
+installed binary checks pass; the normal launcher returns. Evidence:
+`monomelon-package-r6-20261112/{r5-comparison-evidence.tar,r5-comparison-results.txt}`.
+
+R6 is now installed through Portage. All four states are migrated through the
+core API into `monomelon-r6-lost-in-blue`; original r5 saves remain intact.
+Four installed-player smokes and an r5 rollback-launcher smoke pass, along with
+package, binary and original-save checks. Backup SHA256:
+`fba3767465711730452e65a3de937c619829e0d98198458d036ff3f2bc31c669`.
+Both host and device copies verify. The normal presenter is unchanged; the
+private render-ahead player used for comparisons is not installed.
+
+Four additional 600-frame runs use that experimental presenter with r6 and null
+audio. Each reports zero underruns/overruns. A preselected 180-frame warm-up
+separates sustained behavior from startup; warmed submission intervals average
+16.712–16.715 ms. Core/handoff service means are 15.583 / 14.982 / 7.571 /
+15.866 ms for cliff/river/menu/ocean, but p95 is 17.068 / 16.615 / 8.069 /
+18.880 ms. Ocean still has a 23.156 ms service outlier. This estimate excludes
+other foreground dependencies and cannot prove 105% whole-pipeline capacity.
+Normal physical audio and representative manual gameplay remain unverified.
+Evidence: `monomelon-package-r6-20261112/{deploy-evidence.tar,steady-evidence.tar,steady-180-results.txt}`.
 
 ### Smaller batches and remaining CPU candidates
 
@@ -585,6 +623,14 @@ predates the current parallel 3D renderer. The candidate changes one constant,
 keeps eight-line batches and uses fresh open-demo PGO; no gain is assumed before
 native output and timing checks. Native diagnostic evidence:
 `monomelon-inline-probe-20261112/{native-evidence.tar,native-inline-results.txt}`.
+
+The parallel-renderer ring64 repeat passes all eight native game/demo output
+comparisons. Three alternating pairs give core throughput gains of
+1.84 / 0.70 / -0.08 / 1.53% for cliff/river/menu/ocean; paired-player gains are
+0.21 / 0.10 / -0.15 / 0.45%. This modest result does not justify replacing the
+installed r6 package; the experiment remains private. Core SHA256:
+`0867fb14aaf4dbb7e0bb52b6e9a8fe5f0530ef365d5eb7f9d35d5d2084fc04b6`.
+Evidence: `monomelon-ring64-parallel-20261112/{native-evidence.tar,results.txt,trace-results.txt}`.
 
 ## Earlier measurements
 

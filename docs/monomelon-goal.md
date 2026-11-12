@@ -43,9 +43,16 @@ The current test set, updated during manual testing on November 12, is:
 - Slot 3: inventory/menu, the easy control.
 - Slot 4: ocean; new.
 
-Monofuel reports cliff/menu feel full speed while river/ocean water effects
-cause noticeable slowdowns. The installed r5 package's three paired 240-frame
-measurements of these four states are:
+**Installed: r6**, core SHA256
+`7e07d202a8a9e04dd2ac3447aea844f4f5b35e094e2da0a40ffd3d9d4377d92c`.
+All four states are migrated into separate save copies, with original saves and
+an r5 rollback retained. The existing installed presenter is unchanged.
+Fresh paired measurements confirm 5.25–6.71% more uncapped core throughput than
+r5; see the [package comparison](monomelon-performance.md#r6-public-source-and-package-checkpoint).
+
+Before this upgrade, Monofuel reported cliff/menu felt full speed while
+river/ocean water effects caused noticeable slowdowns. Earlier r5 measurements
+of these four states were:
 
 | State | Uncapped core capacity | Paced player speed |
 | --- | ---: | ---: |
@@ -62,17 +69,20 @@ r4 in the same batch, river/ocean player throughput improves 15.82%/59.67%.
 The emulation thread and its remaining 2D fences now warrant investigation;
 the older single-worker ocean profile is no longer the current critical path.
 
-Cliff core capacity still falls short of 105%, and neither water scene sustains
-full speed in the player. These short core-only and paced measurements do not
-establish whole-pipeline headroom. Representative manual acceptance is pending.
+In that r5 batch, cliff core capacity falls short of 105%, and neither water
+scene sustains full speed in the player. These historical core-only and paced
+measurements do not establish whole-pipeline headroom. Representative manual
+acceptance of the final candidate is pending.
 Do not add improvement percentages from separate comparison batches.
 
-Follow-ups improve uncapped core throughput by about 4–6%; these CPU changes are
-published in the r6 ebuild, whose package is validated but not installed yet.
+The CPU follow-ups are published in the installed r6 ebuild.
 Private frontend work overlaps display rendering with the previous paired flip.
-Warmed core submissions average near the native cadence, but recurring long
-frames remain: compilation bursts and 2D fences both contribute. Neither the
-complete pipeline's 5% buffer nor manual acceptance has been demonstrated.
+Four 600-frame r6 runs through that experimental presenter show no null-backend
+audio underruns and warmed submissions near native cadence, but recurring long
+frames remain even after three seconds of warm-up. Compilation bursts and 2D
+fences both contribute. These are not measurements of the unchanged installed
+presenter. Neither the complete pipeline's 5% buffer nor manual acceptance has
+been demonstrated.
 
 See [performance measurements and previous experiments](monomelon-performance.md)
 before proposing work. Compiler alternatives, frontend/core overlap and GPU
