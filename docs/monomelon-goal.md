@@ -10,7 +10,7 @@ performance reference; melonDS remains our accuracy baseline.
 
 ## What counts as done
 
-- Both saved overworld scenes sustain the game's native **59.8261 frames/s**
+- All three saved outdoor scenes sustain the game's native **59.8261 frames/s**
   (about **16.715 ms/frame**) in uncapped capacity tests. Inventory retains
   full-speed capacity.
 - Normal playback maintains full game speed with clean audio and no recurring
@@ -24,13 +24,25 @@ performance reference; melonDS remains our accuracy baseline.
 
 ## Current baseline
 
+The current test set, updated during manual testing on November 12, is:
+
+- Slot 1: near the cliff, unchanged.
+- Slot 2: river near the start; new, important/common gameplay location.
+- Slot 3: inventory/menu, the easy control.
+- Slot 4: ocean; new.
+
+Monofuel reports cliff/menu feel full speed while river/ocean water effects
+cause noticeable slowdowns. The following measurements use the **previous**
+two-outdoor-scene set; do not reuse old slot-2 results for the river or infer
+the new ocean scene's performance. Capture a fresh baseline for all four slots.
+
 `games-emulation/libretro-monomelon-1.4.0-r4` builds our engine and wrapper forks
 with the existing compiler, open-demo PGO, exact ARM64 rasterizer changes and
 batched 2D rendering on a worker. Its first three paired package runs measure
 **97.35% / 98.66% overworld speed**, with inventory near 100%. Closing that
 playback gap requires roughly **2.72% / 1.36% more throughput**, or
 **0.45 / 0.23 ms less per frame**. These are short neutral-input measurements;
-manual gameplay/audio acceptance is pending.
+manual full-speed acceptance remains incomplete, especially around water.
 
 Uncapped core capacity is **99.65% / 116.47%** in the overworlds, so scene 1
 also needs consistent core headroom. The former r3 baseline was

@@ -1,5 +1,11 @@
 # monoMelon tweaks and performance
 
+**Benchmark update, November 12:** slot 2 is now the river near the start and
+slot 4 is a new ocean scene. Slot 1 remains the cliff and slot 3 the menu.
+Monofuel reports cliff/menu feel full speed, with slowdowns around water.
+The percentage tables below precede this update unless explicitly marked;
+old slot-2 measurements are not river measurements. Fresh profiles are pending.
+
 On the Anbernic RG DS Plus, the installed monoMelon `1.4.0-r4` reaches
 **97.35% / 98.66% of normal Lost in Blue overworld speed** in its first three
 paired playback runs, with inventory near full speed. The earlier compiler/open-demo-PGO work improves throughput
