@@ -387,6 +387,46 @@ candidate SHA256 is
 `988effd449e5dfeeea0e19d53ac531e1e2761e371a23dbe3c7cd37976ed3cc92`.
 Installed r3, public engine/wrapper sources and original saves remain unchanged.
 
+### Sprite selection and 2D PGO controls against r3
+
+An ARM64 little-endian prototype selects visible sprites eight at a time with
+NEON, preserving OAM order and leaving the original rasterizer and portable
+path intact. It reads current OAM each line, with no cache or worker. Native
+tests compare **172,183,552** scalar visibility predicates, ordered lists and
+output canaries, including wrapped Y, signed X boundaries, shapes and affine
+double sizes. A fresh four-open-demo PGO build preserves all three video/PCM
+sequences (30 warmup +120 checked frames).
+
+A separate control restores original r3 `GPU2D_Soft.cpp` and disables profile
+use only for that translation unit. All other trained objects remain; the
+NEON-selection change is absent. Its three video/PCM comparisons also pass.
+Each candidate receives its own three alternating 360-frame pairs per
+scene/mode, with no hashing/profiling inside the timing comparisons:
+
+| Candidate | Headless overworld 1 / 2 change | Player overworld 1 / 2 change | Decision |
+| --- | ---: | ---: | --- |
+| NEON sprite selection | +1.195% / +1.690% | +0.856% / +0.420% | Not promoted; no material player gain established |
+| Disable PGO only for original 2D renderer | -1.687% / -2.055% | -1.877% / -3.019% | Rejected |
+
+Culling improves uncapped inventory 2.239%, while paced player inventory changes
+-0.237%. The PGO control changes them -2.889% / -0.209%. These are independent
+comparisons, not changes to add together. The control does not establish that
+the existing demos are the best possible training mix; it shows that discarding
+their 2D profile is not a useful shortcut. Installed r3 and original saves remain
+unchanged.
+
+Candidate SHA256 values:
+
+- Culling: `087ea9b797786b533056358ebd7f83f78f5e122d477b0d0ae4bcf1abd1b5e573`.
+- Original 2D without PGO: `8013defe319bf763f1fb29c6edc1635eccb41ae10bf430fe030dd928c220c4ce`.
+
+A separate six-second r3 player hardware-counter sample records main/3D-worker
+IPC **0.666 / 0.864**, branch-miss ratios **5.0% / 2.6%**, and L1 data-load-miss
+ratios **1.3% / 2.9%**. These describe CPU execution, not removable frame time.
+They do not establish a RAM-bandwidth bottleneck; DDR bandwidth is unmeasured.
+The generic cycles alias also attempts an unsupported Rockchip DDR event;
+the ARM CPU cycles/instruction counters themselves work.
+
 ### GLES renderer feasibility
 
 A [standalone surfaceless probe](https://github.com/monofuel/melonDS/blob/master/tests/monomelon/probe-compute-gles.cpp)
