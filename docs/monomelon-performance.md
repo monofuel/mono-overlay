@@ -586,7 +586,26 @@ SHA256 `a24ef7fc353c18bf8a69f6277c6345b724ae829a47086703c7d112a575f3a529`.
 It passes all eight native output comparisons, four installed-player smokes and
 an explicit r6 rollback smoke. Four slots are migrated through the core API into
 `monomelon-r8-lost-in-blue`; original SRAM/states and the microphone-enabled
-player remain intact. Final installed timing and manual acceptance are separate.
+player remain intact.
+
+Post-installation, one 600-frame run per scene uses the installed package,
+90 headless warm-up frames, copied saves and the same lightweight-loop player.
+Player timing includes startup/final synchronization; audio uses the null backend
+and microphone is disabled. This batch has no paired control and is separate
+from the candidate comparison above:
+
+| State | Core time, ms/frame | Player loop, ms / 600 frames | Underruns / overruns |
+| --- | ---: | ---: | ---: |
+| Cliff | 14.3567 | 10,101 | 0 / 0 |
+| River | 13.8008 | 10,095 | 0 / 0 |
+| Inventory | 7.0140 | 10,030 | 0 / 0 |
+| Ocean | 14.0540 | 10,162 | 3 / 0 |
+| Heavier river | 15.2646 | 10,100 | 1 / 0 |
+
+All installed binaries and original/current saves verify unchanged after these
+tests; the normal launcher is restored. Manual r8 audio/gameplay acceptance and
+the whole-pipeline margin are still pending. There are still ocean/river hitches
+to investigate; this is a deployable improvement, not a completed goal.
 
 A private headroom stress test retains normal physical paired GPU output and
 audio queueing, adding about 0.796 ms to each core/main stage per frame, with a
