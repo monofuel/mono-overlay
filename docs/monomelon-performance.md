@@ -364,6 +364,74 @@ Evidence: private `monomelon-backdrop-20261112`,
 `ahead-policy-results.txt`. Fresh sources and open-demo PGO are used for each
 CPU build; percentages from separate batches are not added together.
 
+### Corrected combination and long-frame diagnosis
+
+The corrected scheduler combination builds as
+`e56d462032276f9fa2e786866b7e20d8e0cef0faa0a6ef70b8d4ea7bb1029106`.
+All four game and four open-demo video/PCM sequences match r5. Assertion-enabled
+snapshot, scheduler and actual generated-dispatch tests pass under QEMU and
+natively. Three alternating 240-frame pairs use the same private render-ahead
+player and normal GPU governor for both cores:
+
+| State | r5 core capacity | Corrected core capacity | r5 player speed | Corrected player speed |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 103.546% | 109.298% | 97.452% | 98.015% |
+| River | 109.358% | 114.218% | 97.750% | 98.008% |
+| Menu | 220.657% | 233.716% | 99.745% | 99.651% |
+| Ocean | 109.718% | 115.069% | 95.386% | 97.989% |
+
+Player columns include startup and the final physical flip; they differ from
+raw loop-only results. The core gain is 4.4–5.9%, but these measurements still
+do not establish whole-pipeline headroom. Nothing new is installed.
+
+A private player now records per-frame monotonic timestamps for core work,
+reply collection, next-frame dispatch and presentation. After the first 30
+frames, core submissions average near the native cadence, while recurring long
+frames remain. In the ocean control, the 95th-percentile CPU/handoff service
+estimate is **19.84–20.55 ms**, and reply collection can take several milliseconds.
+This estimate excludes some foreground dependencies; it is not the goal's
+whole-pipeline capacity measurement.
+
+Two reversed-order tests temporarily raise only the frontend thread's priority
+from nice 0 to -10 after initialization. Ocean handoff p95 falls from
+**3.17–3.82 ms to 0.26–0.36 ms**, but core spikes remain and total results vary.
+Raising both the frontend and emulation thread also leaves long frames. All
+priority changes end with their private processes; no service policy is changed.
+
+Cliff frames 34, 35, 44 and 149 repeatedly take longer than surrounding frames;
+frame 44 takes roughly 23 ms across priority variants. Ocean frame 36 also
+repeats as a long frame. Explicit `perf record --clockid mono` allows samples
+to be aligned with these intervals. Samples include JIT compilation in cliff
+spikes, but are too sparse to assign the whole delay to it. A following trace
+separates emulation-thread CPU work from off-CPU time (after 30 warm-up frames):
+
+| State | Mean core wall time | Mean thread CPU time | Mean off-CPU time | Reproducible spike: wall / CPU |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 15.416 ms | 14.272 ms | 1.144 ms | Frame 44: 23.194 / 21.984 ms |
+| Ocean | 15.316 ms | 13.140 ms | 2.176 ms | Frame 36: 23.912 / 22.479 ms |
+
+Thus scheduling/fence waits matter, but do not explain the largest repeatable
+spikes: those consume substantially more CPU too. Off-CPU time does not distinguish
+preemption from renderer fences. The next diagnostics should measure compilation
+cost and fence time within these specific frames before choosing a code change.
+The earlier default-clock profile must not be aligned to CLOCK_MONOTONIC traces.
+
+Another private experiment removes the explicit `glFinish`, retaining buffer
+ownership and paired flips. The checked Linux 7.0.2
+[GEM plane helper](https://github.com/gregkh/linux/blob/v7.0.2/drivers/gpu/drm/drm_gem_atomic_helper.c)
+and [atomic helper](https://github.com/gregkh/linux/blob/v7.0.2/drivers/gpu/drm/drm_atomic_helper.c)
+provide implicit render-fence synchronization. This scout shows no consistent
+solution to the gap; the normal presenter is unchanged. It is not a display
+accuracy acceptance test.
+
+Evidence: `monomelon-cpu-combined-fixed-20261112/{native-evidence.tar,results.txt,physical-player-results.txt}`
+and `monomelon-present-20261112/{trace-fence-evidence.tar,trace-results.txt,priority-evidence.tar,priority-results.txt,trace-profile-evidence.tar}`.
+Per-thread CPU measurements are in `cpu-time-evidence.tar` and `cpu-time-results.txt`
+under the same presentation experiment root.
+Automated audio stays silent, and installed binaries/save checks pass after
+each batch. Warmed averages, headless capacity and a scheduling improvement
+alone do not complete the full-speed, clean-audio and 5% buffer goal.
+
 ## Earlier measurements
 
 On the Anbernic RG DS Plus, monoMelon `1.4.0-r4` reaches
