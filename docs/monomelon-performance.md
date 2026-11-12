@@ -307,13 +307,62 @@ Both experiments remain private and uninstalled. Evidence is in
 Combining compatible candidates requires a fresh measured build; adding these
 separate percentage gains is not evidence of combined performance.
 
-One unmeasured lead is backdrop palette writes: the existing dirty flags
-distinguish writes starting at offsets 0/0x400 (`0x10`/`0x40`) from other palette
-writes. The simple snapshot experiment still copies 2 KiB for these per-line
-writes. Keeping other colours cached while copying the first full 32-bit word
-of each background palette may avoid that work, including aligned 16/32-bit
-writes. It needs explicit byte-for-byte snapshot tests, mid-frame word writes,
-reset/state/renderer-switch coverage and native output/timing comparisons.
+### Combined CPU candidate and presentation experiments
+
+Backdrop-only palette caching is now tested, including full 32-bit writes at
+offsets 0/0x400. A 4,096-step snapshot fixture covers reused slots, unchanged and
+mixed writes, reset, state loading and renderer replacement. Deliberately copying
+only 16 bits fails the byte comparison. Complete-frame/state fixtures and all
+four game/four open-demo video/PCM sequences match control. Three paired runs
+show no useful overall player gain: cliff/river/menu/ocean change
+**-0.998/-0.371/-0.025/+0.474%**. This candidate remains uninstalled.
+
+A fresh build combines scheduler caching, backdrop/OAM snapshot reuse, shared
+AArch64 dispatch tails and eight-line 2D batches. Three alternating 240-frame
+pairs, with capture callbacks included in uncapped core timing:
+
+| State | r5 core capacity | Combined core capacity | r5 player speed | Combined player speed |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 102.371% | 107.889% | 96.457% | 97.638% |
+| River | 109.531% | 115.878% | 96.891% | 97.535% |
+| Menu | 221.559% | 234.688% | 99.093% | 99.717% |
+| Ocean | 109.909% | 115.157% | 93.243% | 94.008% |
+
+Core SHA256: `7169cfe8602d14316551a0fc01db4b074e785d701aa525c47ef91a426ed675f7`.
+All four game/four open-demo output sequences match, and native ARM64 snapshot,
+scheduler and emitted-dispatch fixtures pass. One cliff core run reaches only
+103.861%; the mean does not prove a consistent 105% margin. Player results still
+miss full speed. A later callback-reentrancy test finds stale scheduler minima
+if a callback queries the target before another due event is removed. Invalidating
+the cache on every removal and sleep-time adjustment fixes the regression; the
+old implementation fails that test. The artifact above predates that fix and
+must not be promoted. A fresh corrected build is being validated separately.
+
+Private Windy experiments keep one paired atomic flip pending while rendering
+the next frame into a free GBM buffer. They never release old scanout before both
+controllers finish, and lock at most three buffers. Timing includes the final
+physical flip, using verified monotonic DRM timestamps rather than returning early
+and ignoring that last wait. Two alternating 240-frame runs with the combined
+core give these per-run ranges:
+
+| State | Render-ahead, normal GPU governor | Render-ahead, supported maximum GPU clock |
+| --- | ---: | ---: |
+| Cliff | 97.654–97.982% | 98.325–98.392% |
+| River | 98.037–98.171% | 98.056–98.205% |
+| Menu | 99.562–99.585% | 99.619–99.851% |
+| Ocean | 96.172–97.845% | 97.824–98.005% |
+
+These are paced, short-run results, not 105% processing-capacity measurements.
+Changing the GPU governor does not consistently solve the gap. The experiment
+temporarily selects the supported 800 MHz performance policy, then restores
+`simple_ondemand`; it changes no voltage, supported clock limits or installed
+configuration. The installed r5 core, player and live saves remain unchanged.
+
+Evidence: private `monomelon-backdrop-20261112`,
+`monomelon-cpu-combined-20261112` and `monomelon-present-20261112` roots, including
+`native-evidence.tar`, `results.txt`, `ahead-native-evidence.tar` and
+`ahead-policy-results.txt`. Fresh sources and open-demo PGO are used for each
+CPU build; percentages from separate batches are not added together.
 
 ## Earlier measurements
 
