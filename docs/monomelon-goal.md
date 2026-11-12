@@ -76,13 +76,21 @@ acceptance of the final candidate is pending.
 Do not add improvement percentages from separate comparison batches.
 
 The CPU follow-ups are published in the installed r6 ebuild.
-Private frontend work overlaps display rendering with the previous paired flip.
+The newer render-ahead presenter is published in the Windy fork but not installed
+in the normal player. It overlaps drawing with the previous paired flip.
 Four 600-frame r6 runs through that experimental presenter show no null-backend
 audio underruns and warmed submissions near native cadence, but recurring long
 frames remain even after three seconds of warm-up. Compilation bursts and 2D
 fences both contribute. These are not measurements of the unchanged installed
 presenter. Neither the complete pipeline's 5% buffer nor manual acceptance has
 been demonstrated.
+
+Latest manual r6 feedback: cliff, inventory and title screen feel great; river
+movement still has significant slowdown. Ocean was not tested in that session.
+An exact 4,910-frame input replay runs near native speed on average with both
+old and new presenters, but still records audio underruns. Investigate slow
+intervals and representative movement; the average does not overturn the manual
+report. See [frontend measurements](https://github.com/monofuel/mono-retro/blob/master/docs/player-performance.md#paired-drm-render-ahead-candidate).
 
 See [performance measurements and previous experiments](monomelon-performance.md)
 before proposing work. Compiler alternatives, frontend/core overlap and GPU
