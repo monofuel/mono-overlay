@@ -339,6 +339,54 @@ the device runs no concurrent compilation/probes during timing. This rules out
 this cache design, not every possible CPU optimization. The installed r3 core,
 launcher and original saves remain unchanged.
 
+### One-scanline-ahead sprite-worker experiment against r3
+
+The existing schedule rasterizes sprites one scanline ahead. A private prototype
+moves that work for both 2D engines onto one additional sleeping worker, while
+CPU emulation advances the next line. The owner thread makes flattened OBJ VRAM
+coherent and snapshots four mutable registers plus 1 KiB OAM per enabled engine.
+The worker reads only these inputs and the stable flattened sprite memory.
+Palettes, horizontal mosaic, windows and compositing remain on the owner thread.
+Waits protect consumption, subsequent memory updates, reset, state operations
+and destruction. No additional emulated frame/scanline delay is introduced.
+
+The prototype uses current r3 sources and a fresh four-open-demo PGO build.
+Both its threaded mode and an identical serial-snapshot control match r3's
+complete video/PCM sequences in all three scenes (30 warmup +120 checked frames).
+Both also match r3 in a separate lifecycle test that exports/restores state
+every 17 frames and resets before alternate restores, for 120 checked frames
+per scene. This exercises state/reset boundaries; it is not a speed measurement.
+Three alternating 360-frame runs per scene/mode exclude hashing from timing:
+
+| Scene | r3 player ms / speed | Serial-snapshot player ms / speed | Sprite-worker player ms / speed | Worker change vs r3 |
+| --- | ---: | ---: | ---: | ---: |
+| Overworld 1 | 20.3074 / 82.310% | 20.5926 / 81.171% | 21.3120 / 78.430% | -4.714% |
+| Overworld 2 | 19.2074 / 87.024% | 19.6704 / 84.976% | 20.3620 / 82.090% | -5.671% |
+| Inventory | 16.8093 / 99.440% | 16.8120 / 99.423% | 16.8139 / 99.413% | -0.028% |
+
+Headless worker throughput regresses **5.763% / 6.716% / 9.020%** respectively.
+Against the identical serial-snapshot artifact, threading adds about
+**0.72 / 0.69 ms** per overworld player frame. The serial control itself is
+1.39% / 2.35% slower than r3 in the player; that difference also includes source
+layout and fresh PGO, so it is not an isolated measurement of OAM-copy cost.
+All end-of-run CPU samples remain 1.992 GHz; recorded temperatures are
+47.8–56.7 degrees C. Automated playback is silent, with independent save copies.
+
+A separate six-second player profile confirms the additional scheduling work:
+main-thread context switches increase from **1,923 to 23,829**, and the new
+sprite worker records **51,226** switches. The main/sprite/3D threads consume
+5.613/1.186/4.268 seconds of CPU in that window, versus 5.796/4.653 seconds
+for r3's main/3D threads. These fixed-duration profiles run at different game
+speeds; their CPU totals are not per-frame savings. Their timings are excluded
+from the capacity comparison above.
+
+**Rejected; not installed.** Parallelizing this small pass at scanline granularity
+does not justify its synchronization and snapshot overhead. This does not rule
+out coarser parallelism or faster sprite selection/rasterization. The private
+candidate SHA256 is
+`988effd449e5dfeeea0e19d53ac531e1e2761e371a23dbe3c7cd37976ed3cc92`.
+Installed r3, public engine/wrapper sources and original saves remain unchanged.
+
 ### GLES renderer feasibility
 
 A [standalone surfaceless probe](https://github.com/monofuel/melonDS/blob/master/tests/monomelon/probe-compute-gles.cpp)
