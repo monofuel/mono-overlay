@@ -1,10 +1,11 @@
 # monoMelon tweaks and performance
 
-On the Anbernic RG DS Plus, the installed monoMelon `1.4.0-r3` reaches
-**82.58% / 86.47% of normal Lost in Blue overworld speed**, with inventory near
-full speed. The earlier compiler/open-demo-PGO work improves throughput
+On the Anbernic RG DS Plus, the installed monoMelon `1.4.0-r4` reaches
+**97.35% / 98.66% of normal Lost in Blue overworld speed** in its first three
+paired playback runs, with inventory near full speed. The earlier compiler/open-demo-PGO work improves throughput
 **20–21%** over its upstream control; `r1` adds **3.6–3.9%**, and `r3` adds
-**1.3–1.6%** in their separate paired comparisons. These are separate batches,
+**1.3–1.6%**; r4's batched 2D renderer adds **19.26% / 14.04%** in its package
+comparison. These are separate batches,
 not percentages to add together. Full-speed overworld gameplay remains unresolved.
 
 ## What changed
@@ -13,7 +14,7 @@ The ebuild pins our engine and wrapper forks, based on melonDS DS 1.4.0.
 Source-archive CMake fixes and renderer changes live in those forks; older
 revisions carried them as ebuild patches. The original performance work changes
 compiler settings and training, followed by exact CPU-renderer changes in `r1`
-and `r3`. Emulated hardware behavior and rendering settings are preserved.
+and `r3`, then parallel 2D rendering in `r4`. Emulated hardware behavior and rendering settings are preserved.
 
 ### CPU and release settings
 
@@ -511,9 +512,76 @@ smaller batches provide no clear playback win. The same artifact forced inline
 reaches only 80.70% / 84.77%, so snapshots alone are not the improvement.
 
 Artifact SHA256: `eb1ab307c76044d12b222dc5b0e803e99a5e41710cfa956dfa40a439f8fd1149`.
-Sources and test artifacts remain private pending final selection and packaging;
-installed r3, original saves, clocks and launcher remain unchanged. Further
-tests combine the earlier 3D candidate and vary ring capacity independently.
+The [engine implementation and fixtures](https://github.com/monofuel/melonDS/commit/4d22164dc9843fd1ef8f3e87b4782463b39b9f39)
+are published; wrapper commit `a2c790780931e40502ed1b54eb53ae7f8a7253dc`
+pins that engine for the r4 recipe. Installed r3 and original saves remain
+unchanged during the following comparisons.
+
+#### Packaged r4 result
+
+The r4 recipe pins engine `4d22164dc9843fd1ef8f3e87b4782463b39b9f39` and wrapper
+`a2c790780931e40502ed1b54eb53ae7f8a7253dc`, with unchanged compiler settings,
+dependencies and open-demo training. It builds from the checksummed public
+archives. Three alternating 360-frame pairs against installed r3 give:
+
+| Scene | r3 player ms / speed | r4 player ms / speed | Throughput gain |
+| --- | ---: | ---: | ---: |
+| Overworld 1 | 20.4759 / 81.63% | 17.1694 / 97.35% | 19.26% |
+| Overworld 2 | 19.3204 / 86.52% | 16.9417 / 98.66% | 14.04% |
+| Inventory | 16.8185 / 99.38% | 16.8130 / 99.42% | 0.03% |
+
+Uncapped r4 capacity is **99.65% / 116.47% / 230.19%**. Overworld 1 still lacks
+consistent full-speed headroom; the goal is not complete. All three full
+video/PCM comparisons match r3. The actual binary package is installed, its
+source notices/API/dependencies checked, and all three migrated states pass
+silent 60-frame smoke tests through the normal wrapper. Representative manual
+gameplay/audio acceptance remains pending.
+
+Installed core SHA256: `7561e16dd677d7b28c92a1c512499eeaab62a7f191312deea08fac7bc541ef84`.
+The original r3 saves remain unchanged; active slots are re-exported into
+`monomelon-batched-lost-in-blue`. The before-batching launcher retains r3 for
+rollback. The temporary cross-build configuration now selects the target
+`strip`/`objcopy` explicitly; package build 2 fixes the first build's host-strip
+QA warning without recompiling the trained core.
+
+#### Follow-ups against the batched control
+
+Each candidate receives fresh four-open-demo PGO, all-three-scene video/PCM
+comparisons and three alternating 360-frame timing pairs per scene/mode.
+
+| Candidate | Headless OW1 / OW2 gain | Player OW1 / OW2 gain | Decision |
+| --- | ---: | ---: | --- |
+| Add deferred perspective division | +3.090% / +0.430% | +1.034% / +0.016% | Retained privately; small OW1 gain needs confirmation |
+| Increase ring capacity 32→64 | +1.054% / +3.125% | +0.112% / +0.005% | Not promoted; no material playback gain |
+| Contiguous framebuffers and direct vertical-layout callback | +0.280% / +1.738% | −0.339% / +0.027% | Not promoted; no playback gain |
+
+The direct callback skips wrapper staging clears/copies only when the two
+contiguous screens exactly match an unrotated, unscaled, gap-free top/bottom
+layout with no cursor; other layouts retain staging. It improves uncapped
+inventory 5.293%, but paced player inventory only 0.072%. This is useful evidence
+about copying costs, not a reason to add that path to the release now.
+
+#### CPU counters after batching
+
+Separate post-warmup, 360-frame headless profiles use named Cortex-A55 PMU
+events. Main/3D/2D task-clock averages in overworld 1 are approximately
+**14.63 / 15.46 / 5.07 ms/frame**, versus r3's main/3D **18.76 / 15.63 ms**.
+Overworld 2 is **13.33 / 12.59 / 4.90 ms**, versus **17.64 / 12.79 ms**.
+These collection windows include shutdown/pipeline cleanup and kernel time;
+they are approximate thread costs, not exact isolated render durations.
+
+Overworld-1 main/3D/2D IPC is **0.601 / 0.888 / 0.981**. Frontend-stall counts
+are **31.4% / 2.9% / 5.2%** of user cycles, backend stalls
+**24.2% / 39.5% / 27.6%**. Here *frontend* means CPU instruction delivery,
+not mono-retro-player. These counters do not assign every stall to a particular
+cache or instruction, and do not establish a DDR-bandwidth limit.
+
+This supports investigating both the remaining main-thread work and 3D
+rendering, rather than expecting more 2D queue tuning to close the gap.
+The as-found governor is `performance`; frequency history records only
+1.992 GHz. Both display modes are 1024×768, clock 62.770 MHz with totals
+1304×800 (about 60.17 Hz), above the game's nominal rate. No clock, governor
+or display-mode changes are made.
 
 ### Deferred perspective division against r3
 

@@ -24,12 +24,18 @@ performance reference; melonDS remains our accuracy baseline.
 
 ## Current baseline
 
-`games-emulation/libretro-monomelon-1.4.0-r3` builds our engine and wrapper forks
-with the existing compiler, open-demo PGO and exact ARM64 tile/sprite and
-color-compositing changes. Two independent package-comparison blocks measure
-**82.58% / 86.47% overworld speed** pooled across ten paired runs per scene,
-with inventory near 100%. Closing that gap requires roughly **21% / 16% more
-throughput**, or **3.53 / 2.61 ms less per frame**, in those scenes.
+`games-emulation/libretro-monomelon-1.4.0-r4` builds our engine and wrapper forks
+with the existing compiler, open-demo PGO, exact ARM64 rasterizer changes and
+batched 2D rendering on a worker. Its first three paired package runs measure
+**97.35% / 98.66% overworld speed**, with inventory near 100%. Closing that
+playback gap requires roughly **2.72% / 1.36% more throughput**, or
+**0.45 / 0.23 ms less per frame**. These are short neutral-input measurements;
+manual gameplay/audio acceptance is pending.
+
+Uncapped core capacity is **99.65% / 116.47%** in the overworlds, so scene 1
+also needs consistent core headroom. The former r3 baseline was
+**82.58% / 86.47%** across ten paired runs per scene. Do not add improvement
+percentages from separate comparison batches.
 
 See [performance measurements and previous experiments](monomelon-performance.md)
 before proposing work. Compiler alternatives, frontend/core overlap and GPU

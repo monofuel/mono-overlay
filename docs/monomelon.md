@@ -23,6 +23,13 @@ the result. Other pixels retain the scalar path. Paired package comparisons
 show a small **1.56% / 1.30%** overworld throughput gain over r2; full speed is
 still unresolved.
 
+Revision `1.4.0-r4` moves software 2D pixel work to a separate worker in batches
+of 16 scanlines. Register latches and VRAM updates keep their original emulated
+timing; immutable snapshots preserve mid-frame changes. Capture and raw VRAM/FIFO
+display modes stay inline. State operations drain the worker and retain window
+carry. The fork includes differential renderer fixtures; the ebuild still uses
+pinned source archives and the same four open training demos.
+
 See [tweaks and measured performance](monomelon-performance.md) for each
 optimization's contribution and the Lost in Blue comparison on the RG DS Plus.
 
@@ -114,7 +121,7 @@ warnings and retain ordinary optimization through `-fprofile-partial-training`.
 ## Validation and saves
 
 ```sh
-bash tests/check-monomelon-package.sh / lib64 libretro-monomelon-1.4.0-r3
+bash tests/check-monomelon-package.sh / lib64 libretro-monomelon-1.4.0-r4
 ```
 
 The [engine fork's tile test](https://github.com/monofuel/melonDS/tree/master/tests/monomelon)
