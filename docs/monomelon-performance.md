@@ -4,9 +4,56 @@
 slot 4 is a new ocean scene. Slot 1 remains the cliff and slot 3 the menu.
 Monofuel reports cliff/menu feel full speed, with slowdowns around water.
 The percentage tables below precede this update unless explicitly marked;
-old slot-2 measurements are not river measurements. Fresh profiles are pending.
+old slot-2 measurements are not river measurements. Fresh measurements follow.
 
-On the Anbernic RG DS Plus, the installed monoMelon `1.4.0-r4` reaches
+## Current four-state measurements
+
+The installed r4 core is `7561e16dd677d7b28c92a1c512499eeaab62a7f191312deea08fac7bc541ef84`.
+Two 240-frame repeats per state/mode, reversing scene order on the second pass,
+give the following baseline. Automated playback uses copied saves, neutral
+input and null audio; output hashing is separate from timed runs.
+
+| State | Core ms/frame | Core capacity | Player ms/frame | Player speed |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 16.9903 | 98.380% | 17.1479 | 97.476% |
+| River | 19.5307 | 85.584% | 19.6396 | 85.109% |
+| Menu | 7.2762 | 229.722% | 16.8333 | 99.298% |
+| Ocean | 28.2101 | 59.252% | 28.6333 | 58.376% |
+
+Player timings include pacing, so a result near 100% does not establish the
+goal's **105% whole-pipeline capacity**. Separate named-thread Cortex-A55 PMU
+captures identify the ocean's 3D worker as the bottleneck: about **27.7 ms/frame**
+of task-clock, versus main **13.5 ms** and 2D **6.3 ms**. Thread times overlap and
+include pipeline completion/cleanup; they must not be summed as frame time.
+The 3D worker retires about one instruction/cycle, with roughly 35% backend
+stalls. These counters do not establish memory-bandwidth saturation.
+
+### Active-polygon row lists: private candidate
+
+The original renderer tests every polygon against every scanline. Ordered
+per-row lists avoid those rejected checks without changing rasterization.
+Only about 4–5% of polygon-row pairs are active in these saved scenes.
+The bounded list builder passes native ARM64 predicate/order/capacity tests,
+and complete video/PCM hashes match r4 for 30 warm-up plus 120 checked frames
+in all four states. This is sequence coverage, not universal accuracy proof.
+
+Three alternating 240-frame pairs compare fresh four-open-demo-PGO builds:
+
+| State | Control player speed | Candidate player speed | Player throughput gain | Candidate core capacity |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 95.766% | 97.512% | 1.823% | 107.317% |
+| River | 84.136% | 91.091% | 8.265% | 95.650% |
+| Menu | 99.363% | 99.445% | 0.083% | 227.762% |
+| Ocean | 58.120% | 59.429% | 2.252% | 60.286% |
+
+Candidate core SHA256: `8e0861f19c2d1615d5d3b672d0b1d22e0df34bb59f607cbacd6e841872564010`.
+It is not installed or published as a release. The river gain is useful, but
+the ocean still needs a much larger reduction in 3D work. A coarse two-worker
+3D-rendering candidate is being built separately; it has no measured gain yet.
+
+## Earlier measurements
+
+On the Anbernic RG DS Plus, monoMelon `1.4.0-r4` reaches
 **97.35% / 98.66% of normal Lost in Blue overworld speed** in its first three
 paired playback runs, with inventory near full speed. The earlier compiler/open-demo-PGO work improves throughput
 **20–21%** over its upstream control; `r1` adds **3.6–3.9%**, and `r3` adds

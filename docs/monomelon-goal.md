@@ -37,13 +37,24 @@ The current test set, updated during manual testing on November 12, is:
 - Slot 4: ocean; new.
 
 Monofuel reports cliff/menu feel full speed while river/ocean water effects
-cause noticeable slowdowns. The following measurements use the **previous**
-two-outdoor-scene set; do not reuse old slot-2 results for the river or infer
-the new ocean scene's performance. Capture a fresh baseline for all four slots.
+cause noticeable slowdowns. Fresh r4 measurements of these four states are:
+
+| State | Uncapped core capacity | Paced player speed |
+| --- | ---: | ---: |
+| Cliff | 98.38% | 97.48% |
+| River | 85.58% | 85.11% |
+| Menu | 229.72% | 99.30% |
+| Ocean | 59.25% | 58.38% |
+
+These are two 240-frame repeats per mode, with neutral input and silent test
+audio. Player results include intentional pacing, and therefore do not measure
+the 105% capacity target. The ocean's 3D worker is the critical path: roughly
+27.7 ms of thread CPU time per frame, versus 13.5 ms main and 6.3 ms 2D.
+These thread timings include cleanup and are not isolated function timings.
 
 `games-emulation/libretro-monomelon-1.4.0-r4` builds our engine and wrapper forks
 with the existing compiler, open-demo PGO, exact ARM64 rasterizer changes and
-batched 2D rendering on a worker. Its first three paired package runs measure
+batched 2D rendering on a worker. Its earlier three paired package runs measure
 **97.35% / 98.66% overworld speed**, with inventory near 100%. These are short
 neutral-input measurements on the previous states, not evidence of the new
 105% capacity target. Manual full-speed acceptance remains incomplete,
