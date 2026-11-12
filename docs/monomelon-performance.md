@@ -259,6 +259,62 @@ is closed. Evidence in the respective private `monomelon-scheduler-20261112`
 and `monomelon-snapshot-20261112` roots includes `native-evidence.tar`,
 `results.txt`, changed-source checks and build logs.
 
+### Smaller batches and AArch64 dispatch tails
+
+With r5's three 3D workers, a same-binary comparison of 2D batches 16 versus 8
+gives the following result. Two alternating 240-frame pairs per state/mode;
+all four video/PCM sequences match. This is a scouting result, not a changed
+shipping default. The previous batching comparisons predate three-worker 3D.
+
+| State | Batch-16 player speed | Batch-8 player speed | Player gain | Core gain |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 95.458% | 96.179% | 0.755% | 1.131% |
+| River | 97.535% | 97.252% | -0.291% | 2.630% |
+| Menu | 98.809% | 99.273% | 0.470% | 6.885% |
+| Ocean | 92.296% | 95.686% | 3.673% | 3.204% |
+
+A separate AArch64 JIT candidate emits shared dispatch tails for ARM9/ARM7.
+They retain each existing block boundary, save flags, account signed cycles,
+reload the current deadline and re-read the normal tagged block table. IRQ/halt,
+cache misses and region changes return through the original C++ path. There is
+no larger-block or direct-link invalidation shortcut. A private validation
+control restores the original exit path. Fresh four-open-demo PGO is unchanged.
+
+Candidate SHA256: `14438180f194f4841c8370f2ffa936a97ae528431d42ac77c1df66242c7d17f4`.
+All four saved-scene and four open-demo video/PCM sequences match r5. Three
+alternating 240-frame pairs, with the normal 16-line batching:
+
+| State | r5 player speed | Dispatch player speed | Player gain | Core gain |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 94.800% | 96.798% | 2.107% | 1.315% |
+| River | 97.063% | 97.275% | 0.218% | 0.677% |
+| Menu | 98.865% | 99.347% | 0.487% | 1.984% |
+| Ocean | 93.171% | 93.847% | 0.725% | 0.672% |
+
+Synthetic tests execute the actual generated tails under QEMU and natively on
+the DS Plus, covering ARM9/ARM7, ARM/Thumb, high guest addresses, cycle deadlines,
+changed targets, pending IRQ handoff, invalidated/wrong-tag entries, region exits,
+signed cycles, flag publication and a forced block-cache reset. Both the original
+and new paths are exercised through the real CPU execution loop. The first test
+harness omitted `NDS::Reset()` and crashed even on the original path; adding the
+required reset fixes it. The retained failing logs document a harness setup
+error, not a skipped production failure. The resulting native test binary has
+SHA256 `e80fd3803e3a98eb4547ae47e7377ea5db7ed8bad9303c8fe1f4ec28e32b96f9`.
+
+Both experiments remain private and uninstalled. Evidence is in
+`monomelon-snapshot-20261112/{batch-evidence.tar,batch-results.txt}` and
+`monomelon-dispatch-20261112/{native-evidence.tar,results.txt,unit-evidence.tar,native-unit.log}`.
+Combining compatible candidates requires a fresh measured build; adding these
+separate percentage gains is not evidence of combined performance.
+
+One unmeasured lead is backdrop palette writes: the existing dirty flags
+distinguish writes starting at offsets 0/0x400 (`0x10`/`0x40`) from other palette
+writes. The simple snapshot experiment still copies 2 KiB for these per-line
+writes. Keeping other colours cached while copying the first full 32-bit word
+of each background palette may avoid that work, including aligned 16/32-bit
+writes. It needs explicit byte-for-byte snapshot tests, mid-frame word writes,
+reset/state/renderer-switch coverage and native output/timing comparisons.
+
 ## Earlier measurements
 
 On the Anbernic RG DS Plus, monoMelon `1.4.0-r4` reaches
