@@ -134,8 +134,41 @@ video and audio capture, with no display or audio output:
 
 The ocean's longer frames remain above the 16.715 ms playback budget. An
 average core rate near 100% does not establish smooth playback or the required
-105% whole-pipeline headroom. Unequal-band tests and a private main-thread
-wait diagnostic are the next checks; no result is claimed for them yet.
+105% whole-pipeline headroom.
+
+### Unequal bands and remaining waits
+
+The same three-worker binary supports validation at arbitrary band boundaries.
+A sweep identifies rows **96/160** as a useful ocean candidate. Three alternating
+240-frame pairs compare the original 64/128 split with 96/160; all four saved
+video/PCM sequences match:
+
+| State | Equal-split player speed | Unequal-split player speed | Player throughput gain | Unequal-split core capacity |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 94.547% | 96.395% | 1.954% | 104.598% |
+| River | 97.702% | 97.095% | -0.621% | 110.838% |
+| Menu | 99.339% | 99.167% | -0.173% | 226.634% |
+| Ocean | 89.880% | 93.693% | 4.243% | 111.551% |
+
+The ocean benefits, while cliff core headroom remains marginal. This is a
+runtime experiment, not a new shipped default or a complete solution.
+
+A private three-worker diagnostic times only the emulation thread's 2D fence
+and 3D frame-done waits. All four video/PCM sequences still match, and native
+synthetic tests pass. With 96/160, its full-player cliff/ocean averages are:
+
+| State | Core wall time including capture | 2D fence wait | 3D frame-done wait |
+| --- | ---: | ---: | ---: |
+| Cliff | 16.845 ms | 1.027 ms | 0.001 ms |
+| Ocean | 16.299 ms | 1.450 ms | 0.001 ms |
+
+The 2D fence can include waiting for 3D rows inside the 2D worker; it is not
+all removable 2D computation. There are about 1.3/1.6 fences per frame here.
+The remaining core elapsed time includes execution, callbacks and preemption.
+Different warm-up windows, diagnostic logging and fresh PGO prevent attributing
+the headless/player difference entirely to CPU contention. No diagnostic timing
+is a measured saving. A temporary CPU-placement experiment tests that hypothesis
+without changing the installed core or persistent system settings.
 
 ## Earlier measurements
 
