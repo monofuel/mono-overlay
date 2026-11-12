@@ -234,6 +234,94 @@ The packaged core SHA256 is
 Future performance changes belong in the forks, followed by new ebuild commit
 pins and fresh correctness/performance comparisons.
 
+## Further CPU experiments against r2
+
+Fresh r2 profiles still show a busy emulation thread and a busy 3D worker.
+A player profile attached after its `Presentation:` startup marker records
+5.796 seconds of core-thread CPU and 4.491 seconds of 3D-worker CPU over a
+six-second window, with 0.553 seconds on the frontend thread. Waiting for the
+marker matters: an earlier attachment also captured initial state/identity
+decoding and hashes, which are not steady gameplay costs.
+
+Three independent GCC/open-demo-PGO rebuilds preserve all three video/PCM
+sequences but do not justify promotion:
+
+| Candidate | Headless overworld 1 / 2 gain | Player overworld 1 / 2 gain |
+| --- | ---: | ---: |
+| Inline the unchanged JIT block lookup into its callers | +0.193% / -1.047% | -1.417% / +0.424% |
+| NEON-copy groups proven unchanged in regular color-effect mode zero | -2.376% / -3.178% | -3.077% / -2.409% |
+| Extend that classifier to regular alpha mode | +1.408% / -0.550% | -0.135% / -1.438% |
+
+The JIT lookup symbol disappears from the compiled candidate as intended;
+removing that call does not establish a useful throughput gain. The pixel
+classifier passes four million scalar-reference cases, but correctness alone
+does not make it faster. These three candidates are rejected.
+
+These exploratory comparisons use three alternating 360-frame repeats per
+scene/mode. Player overworld 1 uses two clean paired repeats: the second round
+is excluded because standalone unit compilation overlapped it. Raw logs are
+retained. No promotion claim relies on the contaminated round.
+
+Inspecting the saved GPU registers also shows why mode-zero specialization
+does not cover the main display: both overworld states have engine A
+`BlendCnt=0x214C` (regular alpha mode). Engine B is `0x0000` / `0x2880` in the
+two states. These are snapshots, not a count of modes throughout gameplay.
+The second scene also has engine B in brightness mode with no primary targets,
+so limiting the shortcut to modes zero/one misses ordinary unchanged pixels.
+
+The final prototype handles untargeted ordinary pixels across all four modes,
+plus opaque 3D where normal effects cannot change it. Sprites, translucent 3D
+and other affected pixels retain the scalar compositor. Keeping a single scalar
+fallback call site also avoids duplicating that loop. Its reference test covers
+four million randomized pixels and exhaustive flag/mode/primary-target cases.
+All three video/PCM sequences match. In three paired 360-frame runs it gains
+**1.876% / -0.271% headless** and **2.533% / 1.137% in the player**; uncapped
+inventory gains 4.593%. These prototype results justify testing a real package,
+not claiming full speed.
+
+### Packaged r3 result
+
+The actual Portage package uses engine commit
+`af1e4a005e3478be1d9327f6aedb46fd0b2e9e2a` and wrapper commit
+`b980e76fc90f890f17a76ff75e6da42eff78caca`. It passes both ARM64 reference tests,
+native package/dependency checks and all three video/PCM comparisons. The
+compiler, dependency versions, PGO inputs and renderer settings are unchanged.
+
+Two independent alternating five-repeat player comparisons give **1.576% /
+1.343%**, then **1.544% / 1.261%** overworld gains. The pooled result is:
+
+| Scene | r2 ms / speed | r3 ms / speed | Throughput gain |
+| --- | ---: | ---: | ---: |
+| Overworld 1 (10 pairs) | 20.5569 / 81.311% | 20.2411 / 82.580% | +1.560% |
+| Overworld 2 (10 pairs) | 19.5819 / 85.360% | 19.3303 / 86.471% | +1.302% |
+| Inventory (5 pairs) | 16.8028 / 99.478% | 16.8267 / 99.337% | -0.142% |
+
+This package does **not** meet the earlier 2% screening target. It is adopted
+as a smaller baseline improvement because both independent blocks reproduce
+gains in both overworlds, with exact output and a small, conservative selector.
+Do not describe it as passing the 2% target or closing the full-speed gap.
+Core SHA256:
+`c823037517a2f52264c0e8ca052b8d3be2698a5370173988ff8c5803409419b6`.
+Portage installation and all three migrated-state player smoke tests pass;
+original saves and previous cores remain preserved. Normal audio/gameplay
+acceptance remains a separate human check.
+
+### GLES compute feasibility
+
+A [standalone surfaceless probe](https://github.com/monofuel/melonDS/blob/master/tests/monomelon/probe-compute-gles.cpp)
+compiles and links seven representative existing compute shader variants on
+the actual Mali-G52/Panfrost, GLES 3.1 Mesa 26.1.8. It adapts the GLSL version and
+precision declarations, enables supported texture-buffer and implicit-conversion
+extensions, and makes two integer return casts explicit. The shader algorithms
+are unchanged. The device reports 256 invocations/group, 32 KiB shared memory
+and eight compute SSBO blocks.
+
+This does not dispatch GPU work, render a game, or establish accuracy or speed.
+The existing engine/wrapper request desktop OpenGL, and the player currently
+lacks libretro hardware-context support. A GLES renderer port and host integration
+remain necessary. Shader compilation is a useful starting point, not a working
+GPU emulator.
+
 ## Measurement and correctness
 
 ### Headless versus the player

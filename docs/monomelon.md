@@ -16,6 +16,13 @@ the wrapper's default engine pin matches the ebuild. Other dependency revisions,
 compiler settings and PGO training are unchanged. The older recipes and patches
 remain available for rollback.
 
+Revision `1.4.0-r3` also copies groups of four pixels when the scalar color
+compositor is guaranteed to return their original values. It handles ordinary
+layers without active primary effects and opaque 3D where effects cannot alter
+the result. Other pixels retain the scalar path. Paired package comparisons
+show a small **1.56% / 1.30%** overworld throughput gain over r2; full speed is
+still unresolved.
+
 See [tweaks and measured performance](monomelon-performance.md) for each
 optimization's contribution and the Lost in Blue comparison on the RG DS Plus.
 
@@ -80,7 +87,7 @@ dumps in the training archive. Training notices are also installed under the
 package's documentation directory.
 
 Dependencies and source-preservation requirements follow
-[the upstream package](libretro-melondsds.md). For `r2`, preserve both fork
+[the upstream package](libretro-melondsds.md). For `r2` and later, preserve both fork
 archives, which contain the former build fixes and renderer patch, together
 with all other Manifest distfiles and this overlay revision. Installed
 `SOURCES.txt` identifies the wrapper and engine commits. The renderer and its
@@ -107,7 +114,7 @@ warnings and retain ordinary optimization through `-fprofile-partial-training`.
 ## Validation and saves
 
 ```sh
-bash tests/check-monomelon-package.sh / lib64 libretro-monomelon-1.4.0-r2
+bash tests/check-monomelon-package.sh / lib64 libretro-monomelon-1.4.0-r3
 ```
 
 The [engine fork's tile test](https://github.com/monofuel/melonDS/tree/master/tests/monomelon)
@@ -119,11 +126,17 @@ masks and transparent indices. On ARM64, from the pinned engine source root:
 c++ -O2 -std=c++17 -Isrc \
   tests/monomelon/test-text-neon.cpp -o /tmp/test-monomelon-text-neon
 /tmp/test-monomelon-text-neon
+
+c++ -O2 -std=c++17 -Isrc \
+  tests/monomelon/test-unblended.cpp -o /tmp/test-monomelon-unblended
+/tmp/test-monomelon-unblended
 ```
 
 The same test can be cross-compiled and run with a matching ARM64 QEMU sysroot.
 It checks the tile helper; whole-engine scroll, VRAM and sprite integration also
-need game-output comparisons. The performance guide records those comparisons.
+need game-output comparisons. The color test checks four million randomized
+pixels and exhaustive flag/mode/primary-target combinations against scalar
+color effects. The performance guide records whole-core comparisons.
 
 Changing the core changes mono-retro's save-state identity hash. Use a separate
 save directory and preserve the original core and states. For these same-engine

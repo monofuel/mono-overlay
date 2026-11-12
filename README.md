@@ -86,6 +86,7 @@ optimizations, internal-call optimization and optional PGO trained on existing
 open-source Nitro Engine demos. Revision `1.4.0-r2` builds pinned commits from
 our melonDS and melonDS DS forks, which carry the source changes. It installs
 alongside upstream.
+Revision `1.4.0-r3` also skips color compositing for pixel groups proven unchanged.
 See [monoMelon](docs/monomelon.md).
 
 ## Sources and licensing
