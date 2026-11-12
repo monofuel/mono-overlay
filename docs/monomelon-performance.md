@@ -439,6 +439,11 @@ combination. It uses fresh four-open-demo PGO; all four game and four demo
 video/PCM sequences match the non-instrumented control. Timings below are
 diagnostic attribution, not a candidate speed comparison. After 30 warm-up frames:
 
+The outer JIT path includes decoding, bookkeeping and the block's first
+interpreted execution, as well as code emission. Its time is not exclusively
+compiler overhead. Renderer waits here concern CPU software rendering, not
+Panfrost display presentation.
+
 | State | Mean JIT CPU time | Mean 2D fence wait | Mean 3D line wait |
 | --- | ---: | ---: | ---: |
 | Cliff | 0.122 ms | 0.796 ms | 0.043 ms |
@@ -473,6 +478,26 @@ Diagnostic core SHA256:
 `f04653f7ea8d3f6277a4be64ec4d24a17e1e21d70e3de50b49cd96937febebe9`.
 Evidence: private `monomelon-frame-cost-20261112/{native-evidence.tar,cost-results.txt}`
 and `monomelon-present-20261112/{priority-2d-evidence.tar,priority-2d-results.txt,affinity-combined-evidence.tar,affinity-combined-results.txt}`.
+
+That follow-up diagnostic now completes all four 120-frame output comparisons
+and 240-frame player traces. Each fence records when it is queued, when the
+worker posts completion and when emulation returns from its wait:
+
+| State | Mean fence wait | Before worker completion | Completion-to-return |
+| --- | ---: | ---: | ---: |
+| Cliff | 0.804 ms | 0.740 ms | 0.064 ms |
+| River | 1.015 ms | 0.927 ms | 0.089 ms |
+| Menu | 1.219 ms | 1.073 ms | 0.146 ms |
+| Ocean | 1.468 ms | 1.377 ms | 0.092 ms |
+
+The first phase includes queued rendering, worker preemption and waits for 3D
+rows; it is not pure compute time. An ocean 6.169 ms fence includes 5.710 ms
+of 3D-line waiting, while another 4.202 ms fence includes only 0.044 ms of it.
+Thus a wakeup-only change cannot remove most fence latency. Smaller 2D batches
+are a candidate for reducing queued work, subject to output and performance tests.
+No new scheduling policy ships. Evidence:
+`monomelon-fence-phase-20261112/{native-evidence.tar,cost-results.txt}`; diagnostic
+core SHA256 `9089b9d69ec9b76d260a89580fa8236b2e6dca5d56d982fe21fa0ff368ac7489`.
 
 ### r6 public source and package checkpoint
 
