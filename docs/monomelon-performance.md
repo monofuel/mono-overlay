@@ -49,7 +49,47 @@ Three alternating 240-frame pairs compare fresh four-open-demo-PGO builds:
 Candidate core SHA256: `8e0861f19c2d1615d5d3b672d0b1d22e0df34bb59f607cbacd6e841872564010`.
 It is not installed or published as a release. The river gain is useful, but
 the ocean still needs a much larger reduction in 3D work. A coarse two-worker
-3D-rendering candidate is being built separately; it has no measured gain yet.
+3D-rendering candidate is measured below.
+
+### Two-worker 3D rendering: private candidate
+
+The existing 3D thread renders the upper half and a persistent helper renders
+the lower half into private buffers. Each publishes finished rows for the 2D
+consumer. Edge marking includes the neighbouring row, and any shadow/mask
+polygon keeps the original single-worker path because stencil history crosses
+rows. This changes CPU scheduling, not rendering quality.
+
+Candidate SHA256: `4167cb9f086c96d4d7f0e566579294586f3ccf24ed4e6ffa13cbb3dac184ea0a`.
+Fresh four-open-demo PGO, three alternating 240-frame pairs, no active-row-list
+change in this candidate:
+
+| State | Control player speed | Candidate player speed | Player throughput gain | Candidate core capacity |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 94.905% | 95.303% | 0.420% | 106.169% |
+| River | 84.361% | 97.087% | 15.086% | 111.785% |
+| Menu | 99.232% | 98.939% | -0.296% | 227.269% |
+| Ocean | 58.089% | 86.800% | 49.427% | 93.169% |
+
+All four state sequences and all four open demos match control video/PCM
+hashes. Native ARM64 synthetic tests compare serial, threaded and banded
+output, both complete colour/depth/attribute layers, shadow sequences,
+FrameIdentical and renderer lifecycle. Coverage does not prove every possible
+emulated hardware transition.
+
+Independent review finds a reachable older race when a POWCNT1 write disables
+rendering while workers read latched state; the extra worker can make the two
+bands disagree. A revised private candidate waits before that reset and
+initializes FrameIdentical. Added tests use the GPU's actual installed renderer
+for power-control, reset and save/load paths. They pass with the barrier and
+fail when it is deliberately removed. The measured candidate above remains
+uninstalled; these fixes are required before promotion.
+
+A single-repeat core-capacity sweep of ocean split rows 64/80/96/112/128 gives
+71.27/77.40/93.56/95.08/85.67%. Output hashes match for every tested split.
+Thus moving the split alone has not closed the gap. Named-thread ocean
+task-clock is approximately main/upper/lower/2D **14.09/11.39/15.72/5.04 ms**
+per frame. A combined active-row/two-worker build and a separate three-worker
+candidate are the next tests; neither has measured results yet.
 
 ## Earlier measurements
 
