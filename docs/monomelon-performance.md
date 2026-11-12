@@ -88,8 +88,54 @@ A single-repeat core-capacity sweep of ocean split rows 64/80/96/112/128 gives
 71.27/77.40/93.56/95.08/85.67%. Output hashes match for every tested split.
 Thus moving the split alone has not closed the gap. Named-thread ocean
 task-clock is approximately main/upper/lower/2D **14.09/11.39/15.72/5.04 ms**
-per frame. A combined active-row/two-worker build and a separate three-worker
-candidate are the next tests; neither has measured results yet.
+per frame.
+
+### Combined lists, lifecycle fixes and three workers
+
+The combined two-worker build (`27534b50e67b045ca34e46301516fa7101cfdf837c99b37c54d80b4c46f74d6c`)
+passes the new real-GPU lifecycle tests, four saved-state video/PCM comparisons
+and four open-demo comparisons. Three alternating 240-frame pairs give player
+**96.611/97.040/99.249/88.904%** for cliff/river/menu/ocean; its ocean control
+is 57.958%. The full 2D integration fixture matches a control with the same
+FrameIdentical initialization fix. Against the older uninitialized control,
+one renderer-replacement frame differs consistently; applying only that
+initialization to the control accounts for the difference.
+
+A further candidate uses three persistent rendering workers with separate
+buffers and line-ready semaphores, defaulting to bands 0–63/64–127/128–191.
+It retains shadow fallback and all lifecycle fixes. Source and compiled hashes
+match; synthetic serial/two/three-worker comparisons pass on x86-64 and native
+ARM64, and a focused host race-detector run reports no warnings. All four
+saved-state and open-demo video/PCM sequences match the r4 control.
+
+Three-worker core SHA256: `1f5034655c6e631c363d35b10787bebe0e38c5dcac5a1a734b60ee434d272498`.
+Three alternating 240-frame pairs:
+
+| State | Control player speed | Three-worker player speed | Player throughput gain | Three-worker core capacity |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 94.666% | 96.287% | 1.712% | 105.080% |
+| River | 84.968% | 97.496% | 14.744% | 111.252% |
+| Menu | 99.693% | 99.759% | 0.066% | 226.389% |
+| Ocean | 57.741% | 89.886% | 55.673% | 100.956% |
+
+These are separate batches from the two-worker comparison; small differences
+between their reported speeds are not a paired estimate of adding a worker.
+Neither candidate is installed or packaged yet.
+
+A separate 360-frame run after 30 warm-up frames enables the frontend's normal
+video and audio capture, with no display or audio output:
+
+| State | Mean ms | Median ms | 95th percentile ms | Maximum ms |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 15.681 | 15.613 | 16.308 | 23.706 |
+| River | 14.983 | 14.935 | 15.732 | 22.673 |
+| Menu | 7.613 | 7.524 | 8.246 | 9.633 |
+| Ocean | 16.145 | 15.578 | 19.108 | 25.402 |
+
+The ocean's longer frames remain above the 16.715 ms playback budget. An
+average core rate near 100% does not establish smooth playback or the required
+105% whole-pipeline headroom. Unequal-band tests and a private main-thread
+wait diagnostic are the next checks; no result is claimed for them yet.
 
 ## Earlier measurements
 
