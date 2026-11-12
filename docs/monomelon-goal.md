@@ -46,7 +46,9 @@ The current test set, updated during manual testing on November 12, is:
 **Installed: r6**, core SHA256
 `7e07d202a8a9e04dd2ac3447aea844f4f5b35e094e2da0a40ffd3d9d4377d92c`.
 All four states are migrated into separate save copies, with original saves and
-an r5 rollback retained. The existing installed presenter is unchanged.
+an r5 rollback retained. The separately deployed microphone-enabled player now
+includes Windy's render-ahead presenter; the audio-scheduling prototypes remain
+uninstalled.
 Fresh paired measurements confirm 5.25–6.71% more uncapped core throughput than
 r5; see the [package comparison](monomelon-performance.md#r6-public-source-and-package-checkpoint).
 
@@ -76,13 +78,13 @@ acceptance of the final candidate is pending.
 Do not add improvement percentages from separate comparison batches.
 
 The CPU follow-ups are published in the installed r6 ebuild.
-The newer render-ahead presenter is published in the Windy fork but not installed
-in the normal player. It overlaps drawing with the previous paired flip.
+The newer render-ahead presenter is published in the Windy fork and now installed
+with the microphone-enabled player. It overlaps drawing with the previous paired flip.
 Four 600-frame r6 runs through that experimental presenter show no null-backend
 audio underruns and warmed submissions near native cadence, but recurring long
 frames remain even after three seconds of warm-up. Compilation bursts and 2D
-fences both contribute. These are not measurements of the unchanged installed
-presenter. Neither the complete pipeline's 5% buffer nor manual acceptance has
+fences both contribute. Those earlier measurements precede the microphone-enabled
+player deployment. Neither the complete pipeline's 5% buffer nor manual acceptance has
 been demonstrated.
 
 Latest manual r6 feedback: cliff, inventory and title screen feel great; river
