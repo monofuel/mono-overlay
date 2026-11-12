@@ -427,6 +427,63 @@ They do not establish a RAM-bandwidth bottleneck; DDR bandwidth is unmeasured.
 The generic cycles alias also attempts an unsupported Rockchip DDR event;
 the ARM CPU cycles/instruction counters themselves work.
 
+### Main-thread 2D work and batching feasibility
+
+A diagnostic based on r3 times the original scanline and sprite routines,
+their nested VRAM-coherence work, and the actual 3D semaphore waits. It changes
+no rendering decisions. All three video/PCM sequences match r3 (30 warmup +120
+checked frames). Separate 360-frame headless/player runs exclude hashing;
+the table averages frames 30–359 of the player runs.
+
+| Scene | Scanlines | Sprites | Nested coherence | Nested GetLine | 2D residual |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Overworld 1 | 3.5294 ms | 1.7858 ms | 0.4011 ms | 0.1080 ms | 4.8061 ms |
+| Overworld 2 | 3.5042 ms | 1.7132 ms | 0.3784 ms | 0.1007 ms | 4.7384 ms |
+| Inventory | 2.9859 ms | 1.1990 ms | 0.3341 ms | 0.0854 ms | 3.7653 ms |
+
+Residual is scanlines + sprites − coherence − GetLine. It includes diagnostic
+overhead and is an upper bound on work a 2D worker could take over, **not a
+measured frame-time saving**. The build makes 3,074 timestamp reads per frame;
+clock calibration estimates about 0.17–0.22 ms for those reads in total, and
+there is additional bitset bookkeeping and a different trained code layout.
+Actual GetLine semaphore waits average only 0.0609 / 0.0568 / 0.0495 ms;
+the frame-end 3D wait is below 0.001 ms in all three scenes.
+
+Flattened 2D VRAM requires updates on an average 0.445 / 0.230 / 0.000 scanlines
+per frame, with a maximum of one in the overworlds. Only the engine-A BG set
+changes; these sequences contain no display capture. A separate write probe
+finds palette writes on every visible line, but snapshotting the palette removes
+that dependency: no other observed write interrupts the visible interval in
+120 checked frames per scene. This supports testing coarse batches with immutable
+register/palette/OAM snapshots and draining before flattened VRAM changes.
+It does not establish safety for untested games or mid-frame effects.
+
+The main emulation thread remains the critical path. A separate six-second
+sample uses 5.796 seconds of main-thread CPU, 4.653 seconds of 3D-worker CPU
+and 0.545 seconds of frontend CPU: about 1.8 cores of a four-core device.
+Moving enough 2D work onto an idle core could help; the earlier per-scanline
+sprite worker shows why queue and synchronization costs must be measured.
+
+### Deferred perspective division against r3
+
+A private 3D candidate delays perspective-factor calculation until a pixel
+passes depth testing. Shadow loops avoid the unused calculation where their
+depth mode permits. The arithmetic itself is unchanged. A native test checks
+675,013,042 interpolation cases with no failures; all three game video/PCM
+sequences also match. The candidate receives fresh four-open-demo PGO.
+
+Three alternating 360-frame pairs give player throughput changes of
+**+0.641% / −0.469% / −0.154%** for overworld 1 / overworld 2 / inventory.
+There is no demonstrated player win, so it is not installed.
+
+A separate pair of alternating CPU profiles per overworld measures the 3D
+thread's task-clock over 360 frames. Mean CPU time falls from **15.3304 to
+14.8622 ms/frame** in overworld 1 and **12.4997 to 12.2320 ms/frame** in overworld
+2 (about 3.1% / 2.1% less CPU time). Collection excludes warmup and includes
+pipeline completion/cleanup, so these are approximate thread costs. This adds
+3D headroom but does not shorten the current main-thread critical path; it may
+be worth combining with a later main-thread improvement.
+
 ### GLES renderer feasibility
 
 A [standalone surfaceless probe](https://github.com/monofuel/melonDS/blob/master/tests/monomelon/probe-compute-gles.cpp)
