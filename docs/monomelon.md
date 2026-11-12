@@ -41,6 +41,12 @@ The forks include standalone scheduler, snapshot, dispatch and renderer tests.
 Compiler flags, other dependency pins and the four open PGO workloads are unchanged.
 The measured CPU gains do not yet establish the full-speed/headroom goal.
 
+Revisions `1.4.0-r7` and `r8` route geometry FIFO writes before general dispatch
+and skip clipping passes for polygons already inside the view volume. Per-word
+timing, power guards, vertex colour rounding and outside-polygon clipping are
+preserved. R8 is installed on the DS Plus; the full-speed/5% headroom goal is
+still open. Both revisions retain the existing compiler flags and open PGO inputs.
+
 See [tweaks and measured performance](monomelon-performance.md) for each
 optimization's contribution and the Lost in Blue comparison on the RG DS Plus.
 

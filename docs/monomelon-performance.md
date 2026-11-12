@@ -581,8 +581,12 @@ saves, null output and microphone disabled:
 
 That is about 3.09% more core throughput than r6 in this batch. Each candidate
 player run has one underrun; the table does not establish clean physical audio
-or universal accuracy. The fresh public-source r8 package is building; it is not
-installed yet. Original saves and the microphone-enabled player remain intact.
+or universal accuracy. The fresh public-source r8 package is installed, core
+SHA256 `a24ef7fc353c18bf8a69f6277c6345b724ae829a47086703c7d112a575f3a529`.
+It passes all eight native output comparisons, four installed-player smokes and
+an explicit r6 rollback smoke. Four slots are migrated through the core API into
+`monomelon-r8-lost-in-blue`; original SRAM/states and the microphone-enabled
+player remain intact. Final installed timing and manual acceptance are separate.
 
 A private headroom stress test retains normal physical paired GPU output and
 audio queueing, adding about 0.796 ms to each core/main stage per frame, with a

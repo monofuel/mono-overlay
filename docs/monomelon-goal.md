@@ -43,14 +43,20 @@ The current test set, updated during manual testing on November 12, is:
 - Slot 3: inventory/menu, the easy control.
 - Slot 4: ocean; new.
 
-**Installed: r6**, core SHA256
-`7e07d202a8a9e04dd2ac3447aea844f4f5b35e094e2da0a40ffd3d9d4377d92c`.
+**Installed: r8**, core SHA256
+`a24ef7fc353c18bf8a69f6277c6345b724ae829a47086703c7d112a575f3a529`.
 All four states are migrated into separate save copies, with original saves and
-an r5 rollback retained. The separately deployed microphone-enabled player now
+an explicit r6 core/launcher rollback retained. The microphone-enabled player
 includes Windy's render-ahead presenter; the audio-scheduling prototypes remain
 uninstalled.
-Fresh paired measurements confirm 5.25–6.71% more uncapped core throughput than
-r5; see the [package comparison](monomelon-performance.md#r6-public-source-and-package-checkpoint).
+R8 adds early FIFO routing and fast acceptance of polygons already inside the
+view volume. The source candidate improves heavy-river core throughput about
+3.09% over r6 in a three-way comparison, with fewer audio underruns. The public
+package passes all eight native output comparisons, four installed player smokes
+and the rollback check. See [r8 evidence](monomelon-performance.md#r8-clipping-fast-acceptance).
+Manual r8 acceptance is pending. A private added-delay stress probe passes cliff,
+river and inventory but still exposes ocean/heavier-river underruns; the extra
+5% whole-pipeline headroom remains unproven. Its artificial delays are not shipped.
 
 Before this upgrade, Monofuel reported cliff/menu felt full speed while
 river/ocean water effects caused noticeable slowdowns. Earlier r5 measurements
@@ -77,7 +83,7 @@ measurements do not establish whole-pipeline headroom. Representative manual
 acceptance of the final candidate is pending.
 Do not add improvement percentages from separate comparison batches.
 
-The CPU follow-ups are published in the installed r6 ebuild.
+The earlier r6 CPU follow-ups are retained in r8.
 The newer render-ahead presenter is published in the Windy fork and now installed
 with the microphone-enabled player. It overlaps drawing with the previous paired flip.
 Four 600-frame r6 runs through that experimental presenter show no null-backend
