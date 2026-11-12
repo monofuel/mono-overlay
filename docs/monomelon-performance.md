@@ -558,6 +558,50 @@ other foreground dependencies and cannot prove 105% whole-pipeline capacity.
 Normal physical audio and representative manual gameplay remain unverified.
 Evidence: `monomelon-package-r6-20261112/{deploy-evidence.tar,steady-evidence.tar,steady-180-results.txt}`.
 
+### r7 FIFO routing
+
+Engine [`397f7d4d`](https://github.com/monofuel/melonDS/commit/397f7d4d067ccc9e4e73a00128871422c5ed8fb0)
+routes geometry FIFO writes before general bus/register dispatch. It retains
+alignment, geometry-power guards and the existing per-word handler; it does not
+batch DMA or change emulated timing. Wrapper
+[`85fbdd3f`](https://github.com/monofuel/melonds-ds/commit/85fbdd3f40a2d1586c34c70e8d23a739659cf85e)
+pins that engine. The r7 ebuild changes only source pins; compiler settings,
+other dependencies and the four open PGO workloads are unchanged.
+
+The private candidate has SHA256
+`c3477dfb0f34b593129e2f0ff1f5ba0965d1eca00442b3d63d283540d6c4ad86`.
+Both changed production files match the published source byte-for-byte.
+Scheduler/snapshot/120-frame renderer tests and a new FIFO-routing fixture pass.
+The latter compares FIFO aliases, alignment, adjacent registers, power states,
+complete FIFO state, IRQ flags, CPU stalls and deadlines against ordinary I/O.
+All four saved-game and four open-demo video/PCM sequences match r6 under ARM64
+QEMU and natively. This is tested coverage, not universal accuracy proof.
+
+Two alternating native pairs use 600 measured core frames after 90 warm-up
+frames, and 600 paced player frames. Same lightweight-loop player, copied saves,
+neutral input, null output and microphone disabled for both cores:
+
+| State | Core r6/candidate ms | Core throughput gain | Player r6/candidate speed | Underruns r6/candidate, total |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 15.0006 / 14.5578 | 3.042% | 99.253% / 99.332% | 2 / 1 |
+| River | 14.2639 / 13.8949 | 2.656% | 99.371% / 99.362% | 0 / 0 |
+| Menu | 7.0128 / 7.0331 | -0.290% | 99.991% / 99.991% | 0 / 0 |
+| Ocean | 14.2232 / 14.1495 | 0.521% | 99.199% / 99.322% | 6 / 1 |
+
+A heavier river checkpoint comes from the manually recorded movement sequence;
+17 captured images in that sequence match an independent replay. Three paired
+runs give core **15.6745 to 15.2357 ms**, about **2.88%** more throughput.
+Player-loop means improve **10,153.7 to 10,111.7 ms** for 600 frames; underrun
+totals drop **13 to 4**, overruns **1 to 0**. Physical audio acceptance remains
+separate. Do not add gains from different batches.
+
+The fresh public-archive r7 package is still building and is **not installed**.
+The table measures the private candidate, not that unverified package. Core
+capacity alone does not satisfy the goal's 105% whole-pipeline requirement.
+A separate player test removes software pacing but keeps every core frame and
+normal presentation: overworld images change almost every frame, so actual
+vblank waits still cap it near native speed. That test cannot prove the margin.
+
 ### Smaller batches and remaining CPU candidates
 
 A same-binary comparison uses the exact r6 core above, changing only
