@@ -781,6 +781,30 @@ branches. Keep r9 installed. All save/binary checks pass and the launcher is
 restored after the comparison. Evidence:
 `monomelon-r9-factor-reuse-20261112/{build-evidence.tar,native-evidence.tar,results.txt,unit.log,unit-seed2.log,arm64-unit.log}`.
 
+### Register-use plans: private candidates, not selected
+
+R9's register allocator rescans the remaining instruction masks for each compiled
+instruction. Two candidates precompute identical suffix masks and eviction ranks:
+one owns a vector in the cache; the other borrows a block-local plan and preserves
+the cache's original size and alignment. Neither changes the emitted allocation
+decisions in 1,902,748 differential preparation steps and 6,623,343 load/store
+actions. Host regressions, ARM64 QEMU and native video/PCM comparisons pass.
+
+Two reversed pairs of 600 core frames after 90 warm-up frames give these mean
+times; each row has its own contemporaneous r9 control:
+
+| Candidate | Ocean r9/candidate ms | Heavier river r9/candidate ms |
+| --- | ---: | ---: |
+| Vector in cache (`9e4de32f…`) | 13.6671 / 13.5487 | 15.0215 / 15.0401 |
+| Borrowed plan (`98a939d9…`) | 13.5736 / 13.6196 | 14.8981 / 15.0493 |
+
+The small ocean gain in the first variant does not carry over to heavier river
+or consistently improve player tails. The borrowed version is slower in both
+core workloads. Neither ships. The corresponding 720-frame player runs still
+have modeled work periods above the target; their timing does not establish
+the required headroom. Evidence:
+`monomelon-r9-register-plan{,-view}-20261112/{native-evidence.tar,results-*.txt}`.
+
 ### r8 clipping fast acceptance
 
 Engine [`1b9c2121`](https://github.com/monofuel/melonDS/commit/1b9c2121492f26709f29d709c1d43de8012e6d56)
