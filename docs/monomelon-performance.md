@@ -139,8 +139,45 @@ Two complete 4,910-frame runs have matching event/footer/cumulative counts. One
 warmed underrun is observed at submission of frame 403, following owner-thread
 CPU times 22.71/18.15/25.82/17.76 ms in frames 400–403; the other run's sole event
 is at startup frame 43. These are observation points, not exact device fault times.
-The CPU-heavy cluster is the next attribution target; compilation versus other
-engine work is still unmeasured. Evidence: `monomelon-r11-audio-event-trace-20261113/`.
+The CPU-heavy cluster motivates the engine attribution below. Evidence:
+`monomelon-r11-audio-event-trace-20261113/`.
+
+#### Moving-frame compilation attribution
+
+Private diagnostic core `d2500410…` adds bounded, default-off frame/compilation
+timers to a14, retaining the r11 recipe and four open PGO workloads. All eleven
+native fixtures, five game/four FOSS video/PCM checks and all 17 unchanged replay
+references pass. Both instrumented runs contain exactly 4,910 complete engine
+records, each inside its corresponding V3 worker interval; accounting and audio
+footers validate. No installed package changes.
+
+Selected completed frames from the first instrumented replay, in milliseconds:
+
+| Frame | Owner CPU | Outer compilation path | Backend, within outer | RunFrame CPU outside outer |
+| --- | ---: | ---: | ---: | ---: |
+| 400 | 24.993 | 7.683 | 4.798 | 16.794 |
+| 402 | 27.928 | 6.346 | 4.117 | 21.074 |
+| 2880 | 30.689 | 9.700 | 5.994 | 20.405 |
+
+Outer time includes the block's first interpreted execution, so it is **not all
+compiler overhead**. Backend time is nested, not an additional cost. The second
+run repeats this pattern: frame 2880 has 30.355 ms owner CPU, 9.608 ms outer and
+20.262 ms RunFrame CPU outside it. Optimizing compilation alone cannot remove
+all the measured long-frame work.
+
+After 120 warm-up frames, each run records 4,896 ARM9 and 228 ARM7 emissions,
+with **zero resets, invalidations, retirements, restores or live reattachments**.
+Mean outer cost is only 0.0624–0.0628 ms/frame; its occasional bursts matter more
+than its average. There are also 14–16 above-native owner-CPU frames with no
+compile attempts at all. Profiling the remaining owner work is the next target.
+
+Same-binary OFF/ON/ON/OFF controls have overlapping mean CPU/work results, but
+instrumented peaks are larger; do not subtract a guessed timer cost. Both ON runs
+have only startup audio events, while the first OFF run observes a warmed
+underrun at frame 403. This does not establish that an ON-run burst caused that
+separate event, or that instrumentation improves audio. Evidence:
+`monomelon-r11-compile-frames-20261113/`, strict joined CSVs and separate audio
+contexts; native archive `a6ca9dce…`.
 
 ### Earlier r9 measurements
 
