@@ -69,6 +69,14 @@ remain pending.
 See [tweaks and measured performance](monomelon-performance.md) for each
 optimization's contribution and the Lost in Blue comparison on the RG DS Plus.
 
+Revision `1.4.0-r12` passes small geometry FIFO entries by value so AArch64 callers
+can retain them in registers. Queue contents, timing and state layout are
+unchanged. It uses the same compiler flags, dependencies and four open PGO demos.
+The packaged build passes native fixtures, saved-scene/open-demo comparisons
+and every frame of the 4,910-frame video/PCM replay. All four reference scenes
+pass the paired-display CPU-reserve test with the 50 ms DS Plus audio profile;
+manual audio acceptance remains separate.
+
 ## Install
 
 ```sh
