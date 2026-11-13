@@ -54,8 +54,8 @@ a Z-buffered pixel passes its depth test. The fresh public package passes all
 eight native output comparisons, four installed player smokes and the r8
 rollback check. Earlier 600-frame follow-ups have zero underruns in cliff/river/menu,
 one in ocean and five in the heavier moving-river fixture, including startup.
-Fresh November 13 production-player runs of 720 frames report zero null-backend
-underruns in all four saved states and one in the heavier river fixture. Separate
+Fresh November 13 production-player runs of 720 frames report three null-backend
+underruns in cliff, zero in river/inventory/ocean, and one in the heavier river fixture. Separate
 V3 diagnostics put each scene's modeled mean below 15.919 ms, but retain long
 individual periods; the model and silent audio runs do not prove the full target.
 See [r9 evidence](monomelon-performance.md#r9-deferred-perspective-factors).

@@ -10,15 +10,15 @@ old slot-2 measurements are not river measurements. Fresh measurements follow.
 
 **November 13, installed r9:** fresh 720-frame runs use the unchanged production
 player (`7b977dee…`) and separate V3 diagnostic runs, copied saves, null audio
-and microphone off. The production runs report zero underruns in all four
-saved states; the heavier moving-river fixture reports one. This does not verify
+and microphone off. The production runs report three underruns in cliff and zero
+in river, inventory and ocean; the heavier moving-river fixture reports one. This does not verify
 physical audio or representative manual play.
 
 V3 gives 599 warmed periods per scene after 120 warm-up frames:
 
 | Scene | Modeled work mean / p95 ms | Periods above native budget | Production underruns |
 | --- | ---: | ---: | ---: |
-| Cliff | 14.9922 / 15.7762 | 6 / 599 | 0 |
+| Cliff | 14.9922 / 15.7762 | 6 / 599 | 3 |
 | River | 14.5337 / 15.9515 | 18 / 599 | 0 |
 | Inventory | 7.5942 / 8.0370 | 0 / 599 | 0 |
 | Ocean | 14.9395 / 17.3115 | 39 / 599 | 0 |
@@ -29,7 +29,11 @@ The accounting model reconstructs actual intervals with zero residual; it is
 not an exact unpaced counterfactual and does not prove the complete 5% margin
 or smooth gameplay. Keep the goal open. Diagnostic ocean reports two underruns
 where its separate production run reports zero; these are different runs,
-not identical scheduling. Evidence: `monomelon-r9-full-pipeline-20261113/`.
+not identical scheduling. These V3 runs' paced whole-loop speed averages are
+99.355% cliff, 99.437% river, 99.949% inventory and 99.445% ocean, including
+startup/final-presentation overhead. The previous zero-underrun cliff summary
+was a reading error; the retained raw logs report production 3/V3 1.
+Evidence: `monomelon-r9-full-pipeline-20261113/`.
 
 ### Earlier r4 baseline
 
