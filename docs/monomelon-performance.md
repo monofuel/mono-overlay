@@ -102,8 +102,8 @@ Fresh installed-r11 10-second user-cycle profiles place 46.9% river / 59.2%
 ocean of weighted samples in the three software-3D threads. Their scanline and
 texture-lookup leaves dominate that work. The emulation owner accounts for
 36.8% / 28.2%; JIT-map leaves are about 30.5% / 33.7% of that owner's samples.
-DWARF stacks are supplemented with leaf-only exports so unwound JIT samples are
-retained. These are CPU sample weights, not frame-critical wall time; profiled
+DWARF stacks are supplemented with leaf-only exports so JIT samples without
+call stacks are retained. These are CPU sample weights, not frame-critical wall time; profiled
 playback is not used as speed or clean-audio evidence.
 
 A separate observational diagnostic measures a narrow terminal-self JIT
@@ -113,10 +113,34 @@ an enabled conservative mutation epoch. Twelve QEMU/native fixtures and all nine
 game/FOSS output comparisons pass. In bounded 720-frame **lifetime** captures,
 strict eligible chains are 25.72% cliff, 20.22% river, 15.43% inventory,
 24.29% ocean and 24.98% heavy river of actual ARM9 chains. Counts include setup
-and load; they describe opportunity size, not a measured speedup. No fast tail
-is implemented. Any candidate must preserve stop/IRQ handling, fresh cycle and
+and load; they describe opportunity size, not a measured speedup. The diagnostic
+implements no fast tail. Any candidate must preserve stop/IRQ handling, fresh cycle and
 deadline accounting, code validity and mapping checks. Evidence:
 `monomelon-r11-self-admission-20261113/` and its corrected v2 fixture.
+
+A guarded self-tail prototype (`df1760a5…`) implements that narrow contract,
+retaining register spills, original unsigned bounds/current lookup pointer,
+full publication identity, mode and per-iteration timing/stop checks. Its eleven
+QEMU/native fixtures and all five game/four FOSS output comparisons pass.
+Two reversed core comparisons give:
+
+| Scene | Installed r11 ms | Rebuilt r11 control ms | Self-tail ms | Change vs installed / rebuilt |
+| --- | ---: | ---: | ---: | ---: |
+| Ocean | 13.342029 | 13.260318 | 13.406827 | −0.48% / −1.09% |
+| Heavy river | 14.663753 | 14.732813 | 14.772110 | −0.73% / −0.27% |
+
+Player work means do not supply a compensating win. **Rejected; not installed.**
+The runtime measurements do not justify the extra path. Evidence:
+`monomelon-r11-self-tail-20261113/`.
+
+A separate passive audio-event diagnostic (`b7551c96…`) records counter changes
+after the existing pump/submit calls, without hot-path logging or new audio work.
+Two complete 4,910-frame runs have matching event/footer/cumulative counts. One
+warmed underrun is observed at submission of frame 403, following owner-thread
+CPU times 22.71/18.15/25.82/17.76 ms in frames 400–403; the other run's sole event
+is at startup frame 43. These are observation points, not exact device fault times.
+The CPU-heavy cluster is the next attribution target; compilation versus other
+engine work is still unmeasured. Evidence: `monomelon-r11-audio-event-trace-20261113/`.
 
 ### Earlier r9 measurements
 
