@@ -59,6 +59,11 @@ Manual r9 acceptance is pending. An earlier private added-delay stress probe pas
 river and inventory but still exposes ocean/heavier-river underruns; the extra
 5% whole-pipeline headroom remains unproven. Its artificial delays are not shipped.
 
+R10's inline depth-test source and ebuild are published and pass native accuracy
+checks. Its fresh package has mixed performance: heavy-river player tails improve
+slightly, while the uncapped mean gain does not repeat. It remains uninstalled;
+new JIT control-flow work is being tested against the retained r9 baseline.
+
 Before this upgrade, Monofuel reported cliff/menu felt full speed while
 river/ocean water effects caused noticeable slowdowns. Earlier r5 measurements
 of these four states were:

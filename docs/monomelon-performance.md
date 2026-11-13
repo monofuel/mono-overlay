@@ -864,12 +864,23 @@ The change is now published in engine
 [`f2b8b7e5`](https://github.com/monofuel/melonDS/commit/f2b8b7e5fae49e0cf786433de12cc9b866b37973)
 with a direct predicate regression test, and pinned by wrapper
 [`48228a8c`](https://github.com/monofuel/melonds-ds/commit/48228a8cc1a089d0b5fdedb504aeda64ddd01fcc)
-for ebuild r10. Its fresh public-source package and eight ARM64 fixtures pass;
-native installation validation is pending. The measurements above belong to the
-prepackage candidate, not an installed-r10 comparison.
+for ebuild r10. Its fresh public-source package and eight ARM64 fixtures pass
+under QEMU and natively, along with game/open-demo video/PCM comparisons.
+The measurements above belong to the prepackage candidate, not an installed-r10
+comparison.
 Evidence: `monomelon-r9-inline-depth-20261112/`, including
 `build-evidence.tar`, `native-evidence.tar`, `followup-evidence.tar` and
 `results-*.txt`.
+
+The fresh r10 binary (`7f9727e2…`) does not reproduce the small uncapped gain.
+Four paired 600-frame comparisons give ocean **13.6689 / 13.7518 ms** and heavier
+river **15.1050 / 15.1128 ms** for r9/r10: −0.603% and effectively flat. Two
+paired player comparisons retain lower heavy-river p95 periods
+(17.6782/16.9236 to 16.9464/16.8143 ms), but mean work periods are similar and ocean
+varies. Correctness passes; the performance tradeoff remains under review, so
+r9 stays installed. See `monomelon-package-r10-20261112/` for the public package,
+validation/recheck archives and summaries. Neither this small tail improvement
+nor the earlier private mean improvement proves the complete goal.
 
 ### Packed blending and unrolling: private, not selected
 
