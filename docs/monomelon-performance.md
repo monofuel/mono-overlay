@@ -965,6 +965,53 @@ remain unfinished.
 Evidence: `monomelon-r9-{topology,split-affinity,balanced-affinity,restore-identity}-20261113/`,
 including native archives, failed-trace evidence, analysis and cleanup logs.
 
+### Bounded early frame collection: private player candidate
+
+An opt-in player experiment consumes an already completed frame up to 3 ms
+before its existing absolute deadline on native DRM GPU output. It adds no
+queued frame, leaves deadline advancement unchanged and preserves desktop,
+framebuffer and fast-forward behavior. The existing prefetch can consequently
+start the following core frame earlier. Twenty-one host tests, four focused
+ARM64/QEMU fixtures and 22 native 720-frame runs pass; all observed collection
+leads stay within the bound. This is a scheduling experiment, not faster core
+processing or a guaranteed reduction in physical display latency.
+
+In the first normal-player batch both control/candidate have zero underruns in
+all four saved scenes. Heavier river has 1/1 underruns in the controls versus
+2/1 with early collection, with one overrun in each candidate run versus none
+in the controls. Instrumented heavy-river modeled p95 improves
+17.7709/17.6805→17.2188/17.1826 ms, but its frontend submission-interval p95
+worsens 17.9436/17.9231→18.1999/18.4852 ms. Ocean work tails and underruns are
+mixed. The lower diagnostic work time does not establish better delivered
+cadence or clean audio; leave this private while attributing the audio events.
+Evidence: `monomelon-early-ready-20261113/{native-evidence.tar,early-analysis.txt,results-v3-*.txt}`.
+
+### A55 JIT code-cache maintenance: private core candidate
+
+The imported emitter conservatively cleans and invalidates written code with
+`dc civac`, including an A53 erratum workaround. An explicit Linux/A55-only
+build option instead uses `dc cvau`, retaining all ranges, instruction-cache
+invalidation and ordering barriers. It defaults off and is a deployment
+assertion, not CPU detection. All four target cores report A55 r2p0.
+[GCC's cache synchronization implementation](https://raw.githubusercontent.com/gcc-mirror/gcc/master/libgcc/config/aarch64/sync-cache.c)
+provides a reference for the normal PoU maintenance sequence.
+
+The actual emitter passes repeated generated-code overwrite and in-place patch
+checks on every physical core. In two reversed 50,000-iteration microbenchmarks,
+emission plus flush plus immediate execution takes 26–34% less CPU for
+32–2,048-byte code ranges. This does not mean game frames improve by that much.
+
+The fresh four-open-demo-PGO core (`1c755d9e…`, 271 profile-use compiles) passes
+all eight ARM64 fixtures under QEMU and natively, all five saved-scene video/PCM
+comparisons and four open-demo comparisons. Two reversed 600-frame uncapped
+pairs after 90 warm-up frames nevertheless give ocean r9/candidate
+**13.573762 / 13.653797 ms (−0.586%)** and heavier river
+**14.934311 / 15.239854 ms (−2.005%)**. Normal-player ocean underruns improve
+2/6→0/0; heavy-river counts are mixed at 1/2→2/1, and instrumented work tails
+are also mixed. The microbenchmark win is insufficient to establish an overall
+promotion; this core remains private and uninstalled. Evidence:
+`monomelon-r9-a55-cache-20261113/{micro-native-evidence.tar,native-evidence.tar,results-summary.txt,results-*.txt}`.
+
 ### Inline depth tests: r10 source
 
 The packaged r9 ARM64 rasterizer retains 15 indirect depth-test call sites after
