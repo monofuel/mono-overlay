@@ -646,6 +646,51 @@ failures establish an exact whole-pipeline capacity percentage. The full goal
 remains open. Both diagnostic players are private; the normal microphone-enabled
 player stays unchanged. Evidence: `monomelon-r9-profile-20261112/{native-evidence.tar,stress-evidence.tar,stress-results.txt}`.
 
+### R9 pipeline timing: core service tails
+
+A private diagnostic player records command issue/receipt, core reply readiness,
+main-thread collection, next submission and paired-display completion timing.
+It keeps the existing microphone-enabled source/dependency pins and changes no
+emulation or display policy. Automated runs use null audio and microphone off.
+The normal installed player is not replaced.
+
+DRM's monotonic timestamp capability is checked before using event timestamps.
+Only the part of a display poll before its completion timestamp is classified
+as a refresh wait; callback work and wakeup delay remain. Software pacing removes
+requested sleep duration, retaining oversleep and event processing. Receipt-time
+pacing counters handle frames collected early by autosave. There is no per-frame
+logging until playback stops and no shared hot-stage timing array.
+
+The overlapping-period model uses the larger of core service and frontend work
+before collection, plus the remaining handoff work. Actual intervals reconstruct
+with **zero nanoseconds discrepancy** across each measured sequence; synthetic
+cases exercise both barriers and autosave collection. This validates accounting
+alignment, not an exact prediction of a faster unpaced run: changing scheduling
+can change contention. Do not treat the model as completion proof.
+
+The latest diagnostic measures 599 periods after 120 warm-up frames:
+
+| Scene | Modeled work mean / p95 ms | Core-owner CPU mean ms | Core non-CPU mean / p99 ms | Modeled periods above native budget |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 14.9046 / 16.2432 | 13.6594 | 1.1077 / 3.1129 | 10 / 599 |
+| River | 14.6452 / 16.5614 | 12.9471 | 1.5120 / 4.0644 | 25 / 599 |
+| Inventory | 7.6324 / 8.1426 | 6.0462 | 1.2387 / 1.8228 | 0 / 599 |
+| Ocean | 15.1787 / 18.2632 | 12.6402 | 2.0646 / 6.5073 | 73 / 599 |
+| Heavier river | 15.8756 / 16.9269 | 14.5216 | 1.1563 / 3.2063 | 48 / 599 |
+
+Core non-CPU time is execution wall time minus that owner's thread CPU time;
+it includes renderer waits and descheduling, which this trace cannot distinguish.
+Command queue delay is measured separately. Frontend work includes GPU completion
+and polling overhead after classified waits; it is not CPU-only time.
+
+Ocean frame 444 spends **12.747 ms on the owner CPU but 13.619 ms off-CPU**;
+frame 467 also has a **4.317 ms command-queue delay**. By contrast, heavier-river
+frame 333 spends **22.755 ms on the owner CPU**, with only **1.491 ms off-CPU**.
+Investigate renderer/fence and scheduling delays separately from CPU/JIT bursts;
+another small average pixel-loop gain alone does not explain these tails.
+Neither physical-audio acceptance nor the full goal is established.
+Evidence: `monomelon-worktrace-20261112/{trace-cpu.tar,native-evidence-v3.tar,results-v3.txt,analyze.nim}`.
+
 ### Quotient reuse: private candidate, not selected
 
 Candidate `ed39fe00…` starts from r9 and tests the preceding perspective quotient
