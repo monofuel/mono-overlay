@@ -257,6 +257,24 @@ required. Frequency samples are all 1.992 GHz, temperatures 51.9–53.8°C, with
 policy changes. Evidence: `monomelon-r11-dirty-limit-20261113/`, scout final
 archive `ee1f643b…`; installed r11 remains unchanged.
 
+The full-route confirmation repeats the tail reduction in both reversed V3
+runs. At the previously unseen BG-heavy frame 2880, owner CPU falls
+**28.042/28.267→24.548/24.368 ms**, and core service falls
+**28.820/29.252→26.004/25.876 ms**. Maximum modeled work falls
+29.012/29.351→26.526/26.112 ms. Mean work remains nearly flat
+(four:12.974/13.026 ms; 32:12.966/12.982 ms), with mixed p99 results.
+
+Warmed V3 underruns/overruns are four **0/0 and 4/1**, versus 32 **0/0 and 1/0**.
+Normal-player totals, including startup, are four **2/0 and 3/1**, versus 32
+**2/2 and 0/0**. These small, variable audio results do not establish clean
+physical audio or an audio fix. All guards/restoration checks pass. Evidence:
+`extended-final-evidence.tar`, SHA256 `531cc634…`, in the same experiment root.
+
+This supports revalidating a **constant-only** candidate: change the original
+budget from four to 32, with no experimental setting or member. Its fresh build,
+package, four-state margin and manual acceptance remain pending; the full
+100%+5% goal is not established by the transition savings.
+
 ### Earlier r9 measurements
 
 **November 13, installed r9:** fresh 720-frame runs use the unchanged production
