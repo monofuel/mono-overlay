@@ -275,6 +275,39 @@ budget from four to 32, with no experimental setting or member. Its fresh build,
 package, four-state margin and manual acceptance remain pending; the full
 100%+5% goal is not established by the transition savings.
 
+#### Constant-only build: shorter spikes, mixed overall results
+
+Fresh core `21679148…` changes only the budget constant from four to 32.
+The normal four-FOSS-PGO build passes eleven native fixtures, five saved-scene
+and four FOSS comparisons, and **all 4,910 video/PCM fingerprints** against the
+installed-r11 oracle. No runtime tuning interface or diagnostic enters the core.
+
+Two reversed full-player comparisons reproduce the shorter transition spikes:
+
+| Completed frame | Installed r11 owner CPU, repeats 1 / 2 | Constant 32 owner CPU, repeats 1 / 2 |
+| --- | ---: | ---: |
+| 398 | 24.910 / 25.078 ms | 23.437 / 23.328 ms |
+| 402 | 25.743 / 26.060 ms | 24.454 / 24.603 ms |
+| 403 | 17.789 / 17.633 ms | 15.161 / 15.272 ms |
+| 2880 | 27.683 / 27.568 ms | 24.529 / 24.731 ms |
+
+Maximum modeled work improves 28.946/28.814→26.234/26.587 ms, but mean work
+worsens 12.742/12.760→13.018/12.965 ms, and p95 rises. This is a measured
+tradeoff, not a broad throughput win. Separate reversed headless means also
+show no general gain: ocean installed/fresh-control/candidate
+13.2525/13.1941/13.2703 ms; heavy river 14.7382/14.5768/14.7936 ms.
+
+Warmed instrumented underruns/overruns are installed **1/1 and 7/1**, versus
+candidate **0/0 and 0/0**. Normal-player totals, including startup, are installed
+**2/0 and 1/0**, versus candidate **1/0 and 4/1**. Consequently these tests do
+not establish an audio fix. All strict 4,910-row, audio-footer, timing
+reconstruction and final binary/save/menu checks pass.
+
+The installed package remains unchanged while four-state and moving-input
+reserve checks evaluate this candidate. Public packaging and manual acceptance
+remain outstanding. Private evidence: `monomelon-r11-dirty-constant-20261113/`,
+native archive `1efe8751…`, full-player archive `b281fb2e…`.
+
 ### Earlier r9 measurements
 
 **November 13, installed r9:** fresh 720-frame runs use the unchanged production
