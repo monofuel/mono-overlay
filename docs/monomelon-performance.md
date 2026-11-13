@@ -179,6 +179,16 @@ separate event, or that instrumentation improves audio. Evidence:
 `monomelon-r11-compile-frames-20261113/`, strict joined CSVs and separate audio
 contexts; native archive `a6ca9dce…`.
 
+A separate installed-r11 profile uses explicit monotonic sample timestamps to
+select the same recorded transition. Of 230 owner samples in frames 392–403,
+19 are in inline `RenderRecord` (8.1% cycle-weighted share), versus none of 657
+in frames 350–391. These are sampling shares, not exclusive timing or projected
+savings. The source forces both 2D engines inline for engine-A capture, raw/FIFO
+display modes or excess VRAM dirty waits. Capture can also return without work
+for height/mapping reasons. Per-frame reason counters are the next measurement;
+the profile alone cannot choose which guard to change. Evidence:
+`monomelon-r11-moving-owner-profile-20261113/`, archive `b6aadd36…`.
+
 ### Earlier r9 measurements
 
 **November 13, installed r9:** fresh 720-frame runs use the unchanged production
