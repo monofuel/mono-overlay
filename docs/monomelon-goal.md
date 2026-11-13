@@ -60,6 +60,14 @@ taxed repeats are clean. **Manual movement, touch and physical audio validation
 are still pending.** The goal remains open; microphone investigation is deferred
 to the planned PC test.
 
+A verified 4,910-frame recording of real river gameplay matches all 17 original
+reference images on r11, but moving-input audio-buffer events remain. Two reversed
+control/added-delay pairs give **1/1 warmed underruns for control**, and **6/1
+underruns plus 2/0 overruns with the extra CPU work**, after 120 warm-up frames.
+Stationary-scene passes therefore do not establish the complete moving-gameplay
+margin. Remaining work includes diagnosing these events and occasional long
+emulation-thread frames, alongside the required manual acceptance.
+
 The current test set, updated during manual testing on November 12, is:
 
 - Slot 1: near the cliff, unchanged.

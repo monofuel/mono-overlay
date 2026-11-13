@@ -40,6 +40,33 @@ inputs are unchanged. Evidence: `monomelon-package-r11-20261113/`, including
 `native-results.txt`, `work-results.txt`, `headroom-results.txt` and deployment
 logs. The default player remains `7b977dee…`; headroom instrumentation is unshipped.
 
+### Moving-input r11 replay
+
+The stationary tests above are supplemented by a previously verified 4,910-frame
+river recording. Its checkpoint is accepted/re-exported through the original r6
+core and r11 into private copies; inputs, options and references stay unchanged.
+R11 matches **all 17 original reference images** across the complete recording.
+Original recordings/saves remain untouched and normal replay identity checks apply.
+
+Separate actual-player/V3 runs report total underruns/overruns of **5/1** and
+**1/0**. These include startup and do not verify physical audio. V3 reconstructs
+4,789 warmed periods with zero residual; modeled mean/p95/p99/max work is
+12.8172/16.2572/17.8689/28.7467 ms. Some long frames contain substantial owner-thread
+CPU work, but its source has not yet been isolated.
+
+Two reversed control/added-delay runs replay the same inputs with null audio,
+microphone/captures off and 120 warm-up frames:
+
+| Probe | Warmed frames | Warmed underruns, repeat 1 / 2 | Warmed overruns, repeat 1 / 2 |
+| --- | ---: | ---: | ---: |
+| Control | 4,790 | 1 / 1 | 0 / 0 |
+| Extra 1/21 frame-period CPU work per stage | 4,790 | 6 / 1 | 2 / 0 |
+
+**The moving sequence still has buffer events.** Neither its mean work estimate
+nor the clean stationary runs establishes the full gameplay/headroom goal.
+Evidence: `monomelon-r11-river-replay-20261113/`, with separate correctness,
+production, V3 and moving-reserve logs. No new core is installed by these tests.
+
 ### R11 follow-ups: texture results and JIT coverage
 
 A private packed-texture-result experiment starts at engine `a14c1f0c…`, with
