@@ -18,8 +18,9 @@ acceptance remain pending.
 
 Two reversed 720-frame normal/added-delay runs per state, excluding 120 warm-up
 frames, have **zero warmed underruns and overruns in cliff, river, inventory and
-ocean in all sixteen standard-scene runs**. The probe adds 1/21 native frame
-period of CPU work to each pipeline stage while preserving video/audio work.
+ocean in all sixteen standard-scene runs**. The probe spins for 1/21 native frame
+period in each pipeline stage while preserving video/audio work. It uses a wall
+clock, so preemption can reduce the actual CPU time consumed.
 Finite-window paced speed is near native; this is a bounded silent stress test,
 not an uncapped 105% processing measurement or physical audio verification.
 Startup events remain in some logs. The extra heavy fixture has one warmed
@@ -60,7 +61,7 @@ microphone/captures off and 120 warm-up frames:
 | Probe | Warmed frames | Warmed underruns, repeat 1 / 2 | Warmed overruns, repeat 1 / 2 |
 | --- | ---: | ---: | ---: |
 | Control | 4,790 | 1 / 1 | 0 / 0 |
-| Extra 1/21 frame-period CPU work per stage | 4,790 | 6 / 1 | 2 / 0 |
+| Wall-clock spin of 1/21 frame period per stage | 4,790 | 6 / 1 | 2 / 0 |
 
 **The moving sequence still has buffer events.** Neither its mean work estimate
 nor the clean stationary runs establishes the full gameplay/headroom goal.

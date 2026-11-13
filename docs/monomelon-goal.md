@@ -51,8 +51,9 @@ and four FOSS video/PCM comparisons pass; the package uses pinned public source
 and the same four open PGO workloads.
 
 In both reversed normal/added-delay runs, all four standard states have **zero
-warmed audio-buffer events**. The diagnostic adds 1/21 frame-period CPU work to
-each pipeline stage while retaining normal rendering/audio work. This supports
+warmed audio-buffer events**. The diagnostic spins for 1/21 frame period in
+each pipeline stage while retaining normal rendering/audio work. Preemption can
+reduce actual CPU time because this version uses a wall clock. This supports
 the margin target but remains a bounded silent stress test, rather than complete
 uncapped-capacity or gameplay acceptance. Startup events remain in some logs;
 the extra heavy fixture has one ordinary-run warmed underrun/overrun, while both
