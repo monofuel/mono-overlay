@@ -40,6 +40,57 @@ inputs are unchanged. Evidence: `monomelon-package-r11-20261113/`, including
 `native-results.txt`, `work-results.txt`, `headroom-results.txt` and deployment
 logs. The default player remains `7b977dee…`; headroom instrumentation is unshipped.
 
+### R11 follow-ups: texture results and JIT coverage
+
+A private packed-texture-result experiment starts at engine `a14c1f0c…`, with
+the same wrapper, compiler settings and four open PGO workloads. It returns
+colour/alpha in one `u32` instead of two output pointers, preserving texture
+reads and arithmetic. The existing format-zero caller bypass remains; a direct
+format-zero helper call returns defined zero. No cache or forced inlining is added.
+Core: `2678c439670a7700ccdf383194ecc92629ff0ead10281f27bcda9f84cecce61f`.
+
+All twelve ARM64/QEMU and native fixtures, five game and four FOSS video/PCM
+comparisons pass. The original-pointer oracle also checks nearly 70 million
+lookups. Generated scanline code shrinks 27,156→25,432 bytes; output stores
+disappear, while other caller spills remain and unpacking adds mask/shift work.
+Smaller code alone does not establish a speedup.
+
+Two reversed 600-frame core comparisons after 90 warm-up frames give:
+
+| Scene | Installed r11 ms | Packed result ms | Throughput change |
+| --- | ---: | ---: | ---: |
+| Ocean | 13.277226 | 13.115531 | +1.23% |
+| Heavy river | 14.613182 | 14.704911 | −0.62% |
+
+A fresh unchanged r11 control (`20f264b7…`, full source manifest verified) has
+a different generated-code layout. Against it, packed-result means improve
+1.00% ocean / 0.74% heavy, but individual gains range 0.25–1.77% and
+−0.04–1.53% respectively. The separate V3 heavy-river modeled means worsen
+15.5644/15.3903→15.6278/15.5349 ms against installed r11. These small, variable
+results do not establish a consistent improvement over the installed build.
+**Not promoted.** Evidence: `monomelon-r11-packed-texel-20261113/`, including
+`native-results.txt`, `control-results.txt` and the separate work summaries.
+
+Fresh installed-r11 10-second user-cycle profiles place 46.9% river / 59.2%
+ocean of weighted samples in the three software-3D threads. Their scanline and
+texture-lookup leaves dominate that work. The emulation owner accounts for
+36.8% / 28.2%; JIT-map leaves are about 30.5% / 33.7% of that owner's samples.
+DWARF stacks are supplemented with leaf-only exports so unwound JIT samples are
+retained. These are CPU sample weights, not frame-critical wall time; profiled
+playback is not used as speed or clean-audio evidence.
+
+A separate observational diagnostic measures a narrow terminal-self JIT
+contract: ARM9/DS/main-RAM code, compiled whole body, final conditional branch
+to its exact start, matching live 64-bit publication, current mapping checks and
+an enabled conservative mutation epoch. Twelve QEMU/native fixtures and all nine
+game/FOSS output comparisons pass. In bounded 720-frame **lifetime** captures,
+strict eligible chains are 25.72% cliff, 20.22% river, 15.43% inventory,
+24.29% ocean and 24.98% heavy river of actual ARM9 chains. Counts include setup
+and load; they describe opportunity size, not a measured speedup. No fast tail
+is implemented. Any candidate must preserve stop/IRQ handling, fresh cycle and
+deadline accounting, code validity and mapping checks. Evidence:
+`monomelon-r11-self-admission-20261113/` and its corrected v2 fixture.
+
 ### Earlier r9 measurements
 
 **November 13, installed r9:** fresh 720-frame runs use the unchanged production
