@@ -925,6 +925,46 @@ throughput changes −0.86%/−2.12%, resident pair −1.86%/−3.14%. Neither s
 Evidence: `monomelon-r9-{texture-block,resident-pair}-20261113/`, including
 build/native evidence archives and paired worktrace summaries.
 
+### Scheduling and JIT restoration follow-ups: private, not selected
+
+Source-validated startup ordering and a DWARF profile identify the emulation
+owner, primary 3D worker, two 3D helpers and 2D worker. Pinning the owner to CPU0,
+main/2D to CPU1 and 3D to CPUs2–3 makes ocean modeled mean work approximately
+17.88–17.92 ms versus 14.93–15.05 ms with default scheduling. Ocean underruns
+increase from 8/6 in the two controls to 47/49. A second layout preserves three
+3D cores, giving each worker a separate core and sharing the foreground/2D work
+with the shortest 3D band. Its two ocean runs have 6/14 underruns versus 6/7 in
+the controls. Neither temporary policy ships. Default runs also vary; an earlier
+zero-underrun ocean sample is not proof of consistent clean playback.
+
+A separate diagnostic expands the restore-cache key to include address and CPU
+alongside the instruction hash, retaining existing literal/range validation.
+Generated fixtures reproduce the old cache's candidate collisions and verify
+the proposed key, but the actual saved scenes never use this path: both key
+modes produce exactly 2,085 new blocks in ocean and 2,053 in heavier river, with
+zero retirements, restores, replacements or repeated compiled identities. All
+observed blocks are first-use compilation. This key change cannot remove those
+bursts and is not shipped as a performance improvement.
+
+The diagnostic measures actual backend compilation CPU separately from outer
+lookup/decode work. Warm heavier river has a 239-block burst costing 5.467 ms of
+backend CPU; ocean has a 113-block burst costing 5.110 ms. Most total compilation
+is startup. These are attribution measurements, not wholly recoverable time.
+The initial open-demo trace exceeds its explicit 65,536-event recorder capacity
+and aborts; that run is invalid. A preserved-failure continuation disables only
+the recorder for the open-demo accuracy checks. All eight native fixtures,
+five game-scene comparisons and four open-demo video/PCM comparisons pass;
+the eight scene-player diagnostic traces retain recording and validate fully.
+
+Normal r9 manual gameplay is now reported extremely close to full speed, with
+only minor ocean walking hitches and remaining ocean/river work. Its 8,925-frame
+session logs 18 underruns and one overrun. No candidate is promoted on the basis
+of average throughput alone; consistent playback and 5% whole-pipeline margin
+remain unfinished.
+
+Evidence: `monomelon-r9-{topology,split-affinity,balanced-affinity,restore-identity}-20261113/`,
+including native archives, failed-trace evidence, analysis and cleanup logs.
+
 ### Inline depth tests: r10 source
 
 The packaged r9 ARM64 rasterizer retains 15 indirect depth-test call sites after

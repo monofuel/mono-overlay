@@ -59,7 +59,13 @@ underruns in cliff, zero in river/inventory/ocean, and one in the heavier river 
 V3 diagnostics put each scene's modeled mean below 15.919 ms, but retain long
 individual periods; the model and silent audio runs do not prove the full target.
 See [r9 evidence](monomelon-performance.md#r9-deferred-perspective-factors).
-Manual r9 acceptance is pending. An earlier private added-delay stress probe passes cliff,
+Manual r9 gameplay now feels very close to full speed: Monofuel reports only
+extremely minor hitching, noticed while walking along the ocean, with some
+remaining work around ocean/river areas. This is encouraging acceptance evidence,
+but does not establish hitch-free playback or the 5% processing buffer. That
+session logs 18 audio underruns and one overrun across 8,925 frames, approximately
+149 seconds. Microphone behavior remains unverified in the open-source stack;
+the stock emulator's microphone interaction works. An earlier private added-delay stress probe passes cliff,
 river and inventory but still exposes ocean/heavier-river underruns; the extra
 5% whole-pipeline headroom remains unproven. Its artificial delays are not shipped.
 
