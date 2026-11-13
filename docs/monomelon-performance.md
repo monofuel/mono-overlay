@@ -558,6 +558,38 @@ other foreground dependencies and cannot prove 105% whole-pipeline capacity.
 Normal physical audio and representative manual gameplay remain unverified.
 Evidence: `monomelon-package-r6-20261112/{deploy-evidence.tar,steady-evidence.tar,steady-180-results.txt}`.
 
+### r9 deferred perspective factors
+
+Engine [`09556fef`](https://github.com/monofuel/melonDS/commit/09556fef981d01d05888b0a55d0a0baddda7a82d)
+keeps the interpolation arithmetic and moves its perspective division after
+depth acceptance for Z-buffered pixels. W-buffer depth still prepares the factor
+first; Y slopes keep the original `SetX` path. Wrapper
+[`c705c103`](https://github.com/monofuel/melonds-ds/commit/c705c10385d4797ad8a83f56cdc69e5f202837b8)
+pins that engine. R9 changes only source pins; compiler flags and the four open
+PGO inputs are unchanged.
+
+Private candidate `3d5ad588…` passes all four native game/four open-demo output
+comparisons. Two alternating 360-frame core pairs after 90 warm-up frames give
+ocean **14.2217 to 13.6542 ms (+4.156%)**, heavier river **15.0963 to 15.0094 ms
+(+0.579%)**. Matching player runs measure 600 steady frames after 120 warm-up
+frames, with null audio and microphone disabled: ocean underruns **4 to 0**,
+heavy **0/0**. Each candidate heavy run has one overrun. These are not physical
+audio acceptance or whole-pipeline margin measurements.
+
+The published focused test compares depth/attribute preparation with the existing
+unsplit API across both directions/depth modes, wrapping spans, signed extremes
+and consecutive rejections. The full host suite passes. The larger private test
+also compares over 675 million values per seed with a fresh r8 reference;
+omitting preparation is detected.
+
+The extra texel cache below is not included. A direct three-pair comparison gives
+deferred-only versus combined core times of **13.6595/13.7610 ms** for ocean and
+**15.0038/15.0422 ms** for heavier river. The last pair reverses direction, and
+there is no demonstrated incremental win from the cache. Keep the simpler path.
+
+The fresh public-source r9 package is building and is **not installed yet**.
+R8 and its saves/rollback remain intact. The full goal is still open.
+
 ### r8 clipping fast acceptance
 
 Engine [`1b9c2121`](https://github.com/monofuel/melonDS/commit/1b9c2121492f26709f29d709c1d43de8012e6d56)
@@ -652,11 +684,13 @@ values per seed, and a broken preparation step is detected. Cached/uncached
 texture tests cover all formats, wrapping, fractional/signed boundaries and
 invalidation; that test also passes under ARM64 QEMU.
 
-The combined candidate passes the host suite and is being checked across all
-four states plus the heavier river. Neither change is installed or published
-as a source release yet. Normal r8 and the microphone-enabled player remain
-unchanged. Whole-pipeline headroom and representative manual acceptance remain
-separate requirements.
+The combined candidate passes the host suite and all native output checks.
+Two full four-state-plus-heavy pairs improve ocean core throughput 3.315% and
+heavy 1.220% against their r8 control, with zero candidate steady underruns.
+A subsequent direct comparison with deferred-only does not justify the extra
+cache, so it stays private. Deferred-only is published as r9 source above;
+the package is still building. Normal r8 and the microphone-enabled player remain
+unchanged. Whole-pipeline headroom and manual acceptance remain separate requirements.
 
 ### r7 FIFO routing
 
