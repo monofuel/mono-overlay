@@ -48,6 +48,8 @@ installed. Means below describe core processing, not complete player headroom.
 | Reuse completed helper interiors during next-frame seeding | +0.64% | +1.07% | Heavy player work/tails mixed; copyback still runs. |
 | r10 inline depth + matrix + seed reuse | +1.73% | +1.52% | Occasional production-player misses remain. |
 | r10 + lazy helper ownership, removing recurring copyback | +1.83% | +1.79% | Ocean player results improve; heavy misses remain variable. |
+| r10 + lazy ownership + NEON matrix + builtin CLZ | +2.48% | +1.94% | No ocean production underruns in either repeat; heavy still has misses. |
+| Same combination + cached FIFO DMA eligibility | +3.39% | +3.18% | Heavy work tails improve; ocean audio misses favor the three-part build. |
 
 Fresh unchanged r9 controls accompany all three comparisons. Against those
 controls, combined throughput improves 2.45% ocean / 1.86% heavy river.
@@ -63,6 +65,17 @@ nine native fixtures and all output comparisons pass. Against its matching
 fresh **r10** control, throughput improves 1.38% ocean / 1.61% heavy river.
 It remains experimental: heavy-river production underruns are 1/1 for installed
 r9 and 1/2 for the candidate. Evidence: `monomelon-lazy-band-copy-20261113/`.
+
+Both combined builds pass eleven ARM64/QEMU fixtures each, the same fixtures
+natively, all five saved-scene output comparisons and all four FOSS comparisons.
+They use fresh open-demo PGO with verified full source manifests and actual
+NEON/CLZ instruction checks. In the direct comparison, adding DMA eligibility
+gains 0.89% ocean / 1.22% heavy over the three-part build. Production ocean
+underruns are 0/0 for three-part and 1/1 for four-part; heavy is 1/1 versus 2/1.
+The four-part heavy V3 modeled mean/p95 improves to 15.45/16.28 and15.56/16.39 ms,
+but this remains a work model rather than complete headroom proof. Warmed
+normal/tax comparisons across all states are pending. Neither build is installed.
+Evidence: `monomelon-cpu-stack-comparison-20261113/`.
 
 Scoped compilation diagnostics count real logical-immediate checks without
 changing emitted code. A warmed ocean burst has 113 blocks / 1,788 checks /
