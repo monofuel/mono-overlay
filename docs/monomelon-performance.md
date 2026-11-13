@@ -35,6 +35,45 @@ startup/final-presentation overhead. The previous zero-underrun cliff summary
 was a reading error; the retained raw logs report production 3/V3 1.
 Evidence: `monomelon-r9-full-pipeline-20261113/`.
 
+### Geometry and buffer-retention candidates
+
+November 13 comparisons use two reversed 600-frame core runs after 90 warm-up
+frames. Each candidate passes native ARM64 fixtures, all five saved-scene
+video/PCM comparisons and all four open-training-ROM comparisons. None is
+installed. Means below describe core processing, not complete player headroom.
+
+| Candidate | Ocean gain vs installed r9 | Heavy river gain vs installed r9 | Limitation |
+| --- | ---: | ---: | --- |
+| NEON 4×4 matrix multiply, scalar overlap path | −0.08% | +1.17% | Ocean flat; player still has audio-buffer misses. |
+| Reuse completed helper interiors during next-frame seeding | +0.64% | +1.07% | Heavy player work/tails mixed; copyback still runs. |
+| r10 inline depth + matrix + seed reuse | +1.73% | +1.52% | Occasional production-player misses remain. |
+
+Fresh unchanged r9 controls accompany all three comparisons. Against those
+controls, combined throughput improves 2.45% ocean / 1.86% heavy river.
+Rebuild/profile variation affects tiny comparisons; the matrix microbenchmark's
+2.05–2.10× routine speedup does not describe whole-game throughput. Evidence:
+`monomelon-r9-matrix-audit-20261113/`,
+`monomelon-r9-band-seed-reuse-20261113/`,
+`monomelon-r10-matrix-seed-20261113/`.
+
+A separate lazy-copy candidate retains helper ownership until a transition
+requires canonical buffers. Its independent scalar-oracle, poisoned-boundary
+and save/load tests pass; native performance comparison is pending.
+
+Scoped compilation diagnostics count real logical-immediate checks without
+changing emitted code. A warmed ocean burst has 113 blocks / 1,788 checks /
+5.130 ms backend CPU; heavy river has 239 / 1,173 / 5.784 ms. A matched counted
+CLZ implementation will test that cost directly; uninstrumented mean FPS alone
+has not established its benefit. Five individual records have zero recorded
+CPU duration despite positive wall duration and remain in the accounting.
+
+DMA diagnostics find roughly 4,445 ocean / 6,723 heavy-river geometry-FIFO DMA
+checks per warmed frame, with no matching channel enabled in these samples.
+This motivates a cached eligibility gate, subject to complete enable/disable,
+reset, state-load and DSi-path coverage. It is not yet an implemented speedup.
+Evidence: `monomelon-r9-clz-traffic-20261113/` and
+`monomelon-dma-traffic-20261113/`.
+
 ### Earlier r4 baseline
 
 The earlier r4 core is `7561e16dd677d7b28c92a1c512499eeaab62a7f191312deea08fac7bc541ef84`.
