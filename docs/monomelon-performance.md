@@ -67,6 +67,34 @@ nor the clean stationary runs establishes the full gameplay/headroom goal.
 Evidence: `monomelon-r11-river-replay-20261113/`, with separate correctness,
 production, V3 and moving-reserve logs. No new core is installed by these tests.
 
+### R11 follow-ups: FIFO values and NEON fog
+
+Two private CPU scouts retain r11's compiler settings and four open PGO demos.
+Passing the private eight-byte geometry FIFO entry by value removes addressable
+temporaries and stack guards in its callers without changing hardening flags.
+The separate fog scout uses exact AArch64 NEON full-colour blending; alpha-only
+fog, density calculation and rendering order remain unchanged.
+
+Both scouts and a fresh unchanged control pass all native fixtures (11/11/13),
+five saved scenes, four open-demo output comparisons and all **4,910 video/PCM
+fingerprints** in the moving river replay. Timing is separate from hashing:
+two reversed 600-frame runs per scene after 90 warm-up frames.
+
+| Scene | Installed r11 ms | Fresh control ms | FIFO value ms | NEON fog ms |
+| --- | ---: | ---: | ---: | ---: |
+| Ocean | 13.513716 | 13.321531 | 13.447585 | 13.517819 |
+| Heavy river | 14.902818 | 14.934817 | 14.574580 | 14.738379 |
+
+FIFO gains **2.25% / 2.47%** heavy-river throughput against installed/fresh r11;
+ocean is **+0.49% / −0.94%**. It remains a whole-player candidate, not an installed
+improvement. Fog gains **1.12% / 1.33%** heavy throughput but loses **1.45%** ocean
+throughput against the fresh control; it is set aside. Neither is promoted.
+
+Evidence: `monomelon-r11-cpu-scouts-20261113/`, strict `core-results.txt` and
+native archive `b8c6e2de…`. Installed core `e1fa23cd…`, fresh control `0a110c76…`,
+FIFO `e6cd6b12…`, fog `14d0c235…`; original saves and installed binaries verify
+unchanged, and the menu is restored after testing.
+
 ### R11 follow-ups: texture results and JIT coverage
 
 A private packed-texture-result experiment starts at engine `a14c1f0c…`, with
