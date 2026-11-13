@@ -611,6 +611,67 @@ of 105% whole-pipeline capacity. Original/save/binary integrity checks pass and
 the normal launcher is restored. The full goal remains open. Evidence:
 `monomelon-package-r9-20261112/{before-r9-backup.tar,deployment-evidence.tar,post-install.log}`.
 
+### R9 profiles and added-work checks
+
+Fresh 900-frame paired-GPU runs profile eight seconds after two seconds of
+warm-up, with user-cycle sampling at 397 Hz and per-thread task-clock counters.
+No lost samples. Ocean's polygon scanline routine accounts for **39.88%** of
+sampled user cycles, texture lookup **10.12%**. These are aggregate sample
+shares, not individual functions' elapsed frame costs.
+
+The heavier river remains sensitive to the emulation owner thread: it uses
+**7,321 ms of task-clock in 8 seconds**, about 91.5% of one core. Its DSO and
+generated JIT code account for **25.60% and 12.67%** of aggregate samples.
+The three 3D workers use **4,417 / 2,701 / 1,249 ms**, and 2D uses **2,279 ms**.
+Work overlaps; adding these times does not give frame latency. The profile does
+not establish memory-bandwidth saturation or that all four cores are busy.
+
+Two alternating private added-work/control pairs measure 600 steady frames
+after 120 warm-up frames. The probe adds about 0.796 ms to each of the core and
+frontend stages; the control has identical counters without that delay. Both
+use the installed r9 core, neutral input, null audio and no microphone:
+
+| Scene | Control underruns | Added-work underruns | Control overruns | Added-work overruns |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 0 | 9 | 0 | 1 |
+| River | 0 | 0 | 0 | 0 |
+| Inventory | 0 | 0 | 0 | 0 |
+| Ocean | 2 | 11 | 0 | 0 |
+| Heavier river | 7 | 6 | 0 | 1 |
+
+These are totals across both repeats. The heavy scene varies enough that the
+added-work total is lower; that does not make the added work an optimization.
+This indirect stress test exposes fragile playback, but neither passes nor
+failures establish an exact whole-pipeline capacity percentage. The full goal
+remains open. Both diagnostic players are private; the normal microphone-enabled
+player stays unchanged. Evidence: `monomelon-r9-profile-20261112/{native-evidence.tar,stress-evidence.tar,stress-results.txt}`.
+
+### Quotient reuse: private candidate, not selected
+
+Candidate `ed39fe00…` starts from r9 and tests the preceding perspective quotient
+against the new numerator/denominator. A bounded 64-bit residual accepts an exact
+same/adjacent quotient; all other cases retain unsigned division. Y interpolation
+is unchanged. There is no floating-point approximation or rendering shortcut.
+
+The six host fixtures pass. Independent scalar-reference tests compare
+**675,013,042 and 677,352,128 values**, with zero mismatches, including wrapping
+and rejected-pixel sequences; an omitted-preparation mutant fails. The first
+seed also passes as ARM64 code under QEMU. All four native game and four open-demo
+video/PCM comparisons match r9, as does the heavier river sequence.
+
+Fresh four-open-demo PGO, two alternating 360-frame core pairs after 90 warm-up
+frames, and matching 600-frame steady player windows give:
+
+| Scene | R9/candidate core ms | Core throughput change | R9/candidate player speed | Steady underruns |
+| --- | ---: | ---: | ---: | ---: |
+| Ocean | 13.7856 / 13.9202 | −0.967% | 100.066 / 100.076% | 1 / 1 |
+| Heavier river | 15.2396 / 15.0618 | +1.181% | 100.173 / 100.176% | 0 / 0 |
+
+The small mixed result does not justify shipping the extra arithmetic and
+branches. Keep r9 installed. All save/binary checks pass and the launcher is
+restored after the comparison. Evidence:
+`monomelon-r9-factor-reuse-20261112/{build-evidence.tar,native-evidence.tar,results.txt,unit.log,unit-seed2.log,arm64-unit.log}`.
+
 ### r8 clipping fast acceptance
 
 Engine [`1b9c2121`](https://github.com/monofuel/melonDS/commit/1b9c2121492f26709f29d709c1d43de8012e6d56)
