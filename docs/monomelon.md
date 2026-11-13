@@ -50,6 +50,11 @@ Revision `1.4.0-r9` defers perspective-factor division until a Z-buffered pixel
 passes depth testing, retaining the original arithmetic and W-buffer behavior.
 R9 is installed on the DS Plus; the full-speed/5% headroom goal is still open.
 
+Revision `1.4.0-r10` keeps the original depth comparisons inline instead of
+calling through a function pointer for each pixel. It retains r9's arithmetic,
+compiler flags, dependencies and four open PGO demos. The fresh package and
+eight ARM64 regression fixtures pass; device installation validation is pending.
+
 See [tweaks and measured performance](monomelon-performance.md) for each
 optimization's contribution and the Lost in Blue comparison on the RG DS Plus.
 

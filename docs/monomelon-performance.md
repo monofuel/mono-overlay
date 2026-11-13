@@ -828,7 +828,7 @@ source-level bookkeeping alone is insufficient evidence of a performance win.
 Evidence: `monomelon-r9-{paired-spills,lazy-ranking}-20261112/`, including
 `build-evidence.tar`, `native-evidence.tar` and `results-*.txt`.
 
-### Inline depth tests: private candidate
+### Inline depth tests: r10 source
 
 The packaged r9 ARM64 rasterizer retains 15 indirect depth-test call sites after
 compiler transformations. Candidate `892dd4b0…` replaces the four selected
@@ -860,7 +860,14 @@ ocean's small aggregate change has mixed signs. Corresponding 720-frame player
 comparisons show a modest heavy-river improvement, while ocean's means/tails
 vary. Long CPU/JIT and renderer-wait periods remain. This is a candidate for a
 further trial, not proof of sustained playback or the required 5% margin.
-It remains uninstalled. Evidence: `monomelon-r9-inline-depth-20261112/`, including
+The change is now published in engine
+[`f2b8b7e5`](https://github.com/monofuel/melonDS/commit/f2b8b7e5fae49e0cf786433de12cc9b866b37973)
+with a direct predicate regression test, and pinned by wrapper
+[`48228a8c`](https://github.com/monofuel/melonds-ds/commit/48228a8cc1a089d0b5fdedb504aeda64ddd01fcc)
+for ebuild r10. Its fresh public-source package and eight ARM64 fixtures pass;
+native installation validation is pending. The measurements above belong to the
+prepackage candidate, not an installed-r10 comparison.
+Evidence: `monomelon-r9-inline-depth-20261112/`, including
 `build-evidence.tar`, `native-evidence.tar`, `followup-evidence.tar` and
 `results-*.txt`.
 
