@@ -8,6 +8,40 @@ old slot-2 measurements are not river measurements. Fresh measurements follow.
 
 ## Current four-state measurements
 
+**November 13, installed r11:** core
+`e1fa23cd2a0f080a2f84c102f0687f9ece8415937c1cae8899e2a9ec5d045b6c`.
+The public pinned package passes eleven native fixtures, five saved-scene and
+four FOSS video/PCM comparisons, installed-package checks, four migrated-state
+launches and an r9 rollback launch. Original r9 saves remain unchanged; the
+normal launcher uses a separate r11 copy. Manual gameplay and physical audio
+acceptance remain pending.
+
+Two reversed 720-frame normal/added-delay runs per state, excluding 120 warm-up
+frames, have **zero warmed underruns and overruns in cliff, river, inventory and
+ocean in all sixteen standard-scene runs**. The probe adds 1/21 native frame
+period of CPU work to each pipeline stage while preserving video/audio work.
+Finite-window paced speed is near native; this is a bounded silent stress test,
+not an uncapped 105% processing measurement or physical audio verification.
+Startup events remain in some logs. The extra heavy fixture has one warmed
+underrun/overrun in its first ordinary run; its other ordinary and both taxed
+runs have zero warmed events.
+
+The fresh package's separate reversed core comparisons give:
+
+| Scene | r9 core ms | r11 core ms | Throughput gain |
+| --- | ---: | ---: | ---: |
+| Ocean | 13.603416 | 13.274534 | 2.48% |
+| Heavy river | 15.223104 | 14.812467 | 2.77% |
+
+V3 modeled ocean means improve 15.1716/15.3199→14.6624/14.8150 ms; heavy means
+16.1483/16.1462→15.6795/15.7634 ms. Tails remain, and that model alone is not
+headroom proof. The underlying compiler flags, dependencies and four FOSS PGO
+inputs are unchanged. Evidence: `monomelon-package-r11-20261113/`, including
+`native-results.txt`, `work-results.txt`, `headroom-results.txt` and deployment
+logs. The default player remains `7b977dee…`; headroom instrumentation is unshipped.
+
+### Earlier r9 measurements
+
 **November 13, installed r9:** fresh 720-frame runs use the unchanged production
 player (`7b977dee…`) and separate V3 diagnostic runs, copied saves, null audio
 and microphone off. The production runs report three underruns in cliff and zero
@@ -39,8 +73,9 @@ Evidence: `monomelon-r9-full-pipeline-20261113/`.
 
 November 13 comparisons use two reversed 600-frame core runs after 90 warm-up
 frames. Each candidate passes native ARM64 fixtures, all five saved-scene
-video/PCM comparisons and all four open-training-ROM comparisons. None is
-installed. Means below describe core processing, not complete player headroom.
+video/PCM comparisons and all four open-training-ROM comparisons. These are
+prototype measurements; the selected combination is packaged in r11 above.
+Means below describe core processing, not complete player headroom.
 
 | Candidate | Ocean gain vs installed r9 | Heavy river gain vs installed r9 | Limitation |
 | --- | ---: | ---: | --- |
@@ -63,8 +98,9 @@ The lazy-copy candidate retains helper ownership until a transition requires
 canonical buffers. Independent scalar-oracle, poisoned-boundary, save/load,
 nine native fixtures and all output comparisons pass. Against its matching
 fresh **r10** control, throughput improves 1.38% ocean / 1.61% heavy river.
-It remains experimental: heavy-river production underruns are 1/1 for installed
-r9 and 1/2 for the candidate. Evidence: `monomelon-lazy-band-copy-20261113/`.
+Its standalone binary was not deployed: heavy-river production underruns are
+1/1 for installed r9 and 1/2 for the candidate. R11 adopts it after combination
+testing. Evidence: `monomelon-lazy-band-copy-20261113/`.
 
 Both combined builds pass eleven ARM64/QEMU fixtures each, the same fixtures
 natively, all five saved-scene output comparisons and all four FOSS comparisons.
@@ -80,8 +116,8 @@ four standard scenes have zero warmed underruns/overruns, with or without
 still has taxed underruns 1/0 and overruns 1/1. The four-part build has taxed ocean
 underruns 3/0 and heavy 0/3, so its small processing advantage does not justify
 the DMA change. These are bounded silent stress tests, not complete gameplay or
-uncapped 105% capacity proof. The selected source is published for r11; its fresh
-public package's native validation remains pending. Installed r9 is unchanged.
+uncapped 105% capacity proof. R11 adopts the selected source; its fresh-package
+validation and installation are recorded above.
 Evidence: `monomelon-cpu-stack-comparison-20261113/`.
 
 Scoped compilation diagnostics count real logical-immediate checks without
@@ -101,8 +137,9 @@ The resulting cached eligibility gate passes native lifecycle, enable/disable,
 state-load, DSi NDMA and all nine output checks. Two reversed comparisons against
 fresh r10 give **−0.52% ocean / +1.25% heavy-river** throughput; production audio
 counts do not improve consistently. It remains private. Counting avoidable work
-alone does not establish a whole-pipeline gain; combined tests will compare
-with and without this gate. Evidence: `monomelon-fifo-dma-gate-20261113/`.
+alone does not establish a whole-pipeline gain. The combined stress comparison
+also favors the three-part build, so r11 excludes this gate.
+Evidence: `monomelon-fifo-dma-gate-20261113/`.
 Evidence: `monomelon-r9-clz-traffic-20261113/` and
 `monomelon-dma-traffic-20261113/`.
 

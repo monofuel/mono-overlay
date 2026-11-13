@@ -48,21 +48,23 @@ preserved. Both revisions retain the existing compiler flags and open PGO inputs
 
 Revision `1.4.0-r9` defers perspective-factor division until a Z-buffered pixel
 passes depth testing, retaining the original arithmetic and W-buffer behavior.
-R9 is installed on the DS Plus; the full-speed/5% headroom goal is still open.
+R9 is retained as the DS Plus's rollback; the full-speed/5% headroom goal is still open.
 
 Revision `1.4.0-r10` keeps the original depth comparisons inline instead of
 calling through a function pointer for each pixel. It retains r9's arithmetic,
 compiler flags, dependencies and four open PGO demos. The fresh package, eight
 ARM64 fixtures and native video/PCM comparisons pass. Packaged performance is
-mixed, so r9 remains installed while further CPU work is tested.
+mixed, so its standalone package was not deployed.
 
 Revision `1.4.0-r11` retains completed software 3D helper buffers between frames,
 restoring canonical storage on transitions. It enables exact AArch64 NEON matrix
 multiplication with the original scalar behavior for overlapping inputs, and
 uses the compiler's leading-zero operation during ARM64 JIT emission. Compiler
 flags, dependency versions and open PGO inputs remain unchanged. Its selected
-prototype passes all four saved scenes with an added-delay headroom probe;
-the fresh public package is undergoing native validation before deployment.
+prototype and public package pass all four saved scenes with an added-delay
+headroom probe. R11 is installed on the DS Plus with separate migrated save
+copies and a tested r9 rollback. Physical audio and manual gameplay acceptance
+remain pending.
 
 See [tweaks and measured performance](monomelon-performance.md) for each
 optimization's contribution and the Lost in Blue comparison on the RG DS Plus.

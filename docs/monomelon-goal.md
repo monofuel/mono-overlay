@@ -36,6 +36,30 @@ performance reference; melonDS remains our accuracy baseline.
 
 ## Current baseline
 
+**Installed: r11**, core SHA256
+`e1fa23cd2a0f080a2f84c102f0687f9ece8415937c1cae8899e2a9ec5d045b6c`.
+The normal launcher uses copied saves under `monomelon-r11-lost-in-blue`; the
+original r9 directory is unchanged, and `mono-retro-lost-in-blue-before-r11`
+retains the verified r9 core/save path. Four migrated states and this rollback
+pass launch checks; the microphone-enabled player is unchanged.
+
+R11 combines r10's inline depth tests with retained software helper buffers,
+exact AArch64 NEON matrix multiplication and faster JIT immediate classification.
+Its public package gains **2.48% ocean / 2.77% heavy-river core throughput** in
+reversed comparisons against r9. All eleven native fixtures, five saved-scene
+and four FOSS video/PCM comparisons pass; the package uses pinned public source
+and the same four open PGO workloads.
+
+In both reversed normal/added-delay runs, all four standard states have **zero
+warmed audio-buffer events**. The diagnostic adds 1/21 frame-period CPU work to
+each pipeline stage while retaining normal rendering/audio work. This supports
+the margin target but remains a bounded silent stress test, rather than complete
+uncapped-capacity or gameplay acceptance. Startup events remain in some logs;
+the extra heavy fixture has one ordinary-run warmed underrun/overrun, while both
+taxed repeats are clean. **Manual movement, touch and physical audio validation
+are still pending.** The goal remains open; microphone investigation is deferred
+to the planned PC test.
+
 The current test set, updated during manual testing on November 12, is:
 
 - Slot 1: near the cliff, unchanged.
@@ -43,7 +67,9 @@ The current test set, updated during manual testing on November 12, is:
 - Slot 3: inventory/menu, the easy control.
 - Slot 4: ocean; new.
 
-**Installed: r9**, core SHA256
+### Earlier r9 baseline
+
+R9 core SHA256
 `1e2bdd76fe1df89931ad94fe1c38d3340289a32cf6944e2c1eff71a63a33ec9a`.
 All four states are migrated into separate save copies, with original saves and
 an explicit r8 core/launcher rollback retained. The microphone-enabled player
@@ -69,19 +95,9 @@ the stock emulator's microphone interaction works. An earlier private added-dela
 river and inventory but still exposes ocean/heavier-river underruns; the extra
 5% whole-pipeline headroom remains unproven. Its artificial delays are not shipped.
 
-R10's inline depth-test source and ebuild are published and pass native accuracy
-checks. Its fresh package has mixed performance: heavy-river player tails improve
+R10's standalone package has mixed performance: heavy-river player tails improve
 slightly, while the uncapped mean gain does not repeat. It remains uninstalled;
-new JIT control-flow work is being tested against the retained r9 baseline.
-
-R11's selected source combines retained software helper buffers, exact NEON
-matrix multiplication and faster logical-immediate classification during JIT
-compilation. Its prototype gains 2.48% ocean / 1.94% heavy-river core throughput
-in a direct r9 comparison. Both reversed normal/added-delay runs in all four
-standard states have zero warmed audio-buffer events; the extra heavy fixture
-still exposes stressed events. This is a bounded stress result, not full goal
-acceptance. The public pinned package is building and undergoing validation;
-r9 remains installed, and representative gameplay/physical audio are pending.
+r11 retains its inline depth-test source in the combined build.
 
 Before this upgrade, Monofuel reported cliff/menu felt full speed while
 river/ocean water effects caused noticeable slowdowns. Earlier r5 measurements
