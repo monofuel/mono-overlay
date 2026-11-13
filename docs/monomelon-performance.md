@@ -691,6 +691,70 @@ another small average pixel-loop gain alone does not explain these tails.
 Neither physical-audio acceptance nor the full goal is established.
 Evidence: `monomelon-worktrace-20261112/{trace-cpu.tar,native-evidence-v3.tar,results-v3.txt,analyze.nim}`.
 
+### Refreshed r9 JIT and fence attribution
+
+Diagnostic core `511d3ab7…` rebases the older compilation/fence probes onto r9.
+It buffers samples until console destruction, uses owner-local counters and
+keeps scanline counters on a separate cache line. Six host fixtures, native
+four-state/heavier-river comparisons and all four open-demo comparisons pass.
+This instrumented core is not installed and its timings are attribution, not
+candidate speed claims.
+
+Initial combined stdout/stderr captures contain interleaved, malformed timing
+fields. They are retained but excluded from analysis. Only the five player runs
+are repeated with separate streams; all 720 engine rows match the corresponding
+worker timestamp interval in each clean run. The following means cover 599
+periods after 120 warm-up frames:
+
+| Scene | Outer JIT CPU ms | 2D fence ms | 3D scanline-wait delta ms |
+| --- | ---: | ---: | ---: |
+| Cliff | 0.0065 | 0.8108 | 0.0407 |
+| River | 0.0363 | 0.9571 | 0.0406 |
+| Inventory | 0.0022 | 1.1526 | 0.0346 |
+| Ocean | 0.0321 | 1.3022 | 0.1312 |
+| Heavier river | 0.0354 | 0.7734 | 0.0412 |
+
+The outer JIT cost includes decoding and the block's first interpreted execution,
+not just code emission. Fence and scanline waits overlap; do not add them.
+Cross-thread line totals describe the frame interval rather than an exact causal
+assignment of every asynchronous line.
+
+- Heavier-river frame 333 compiles **239 blocks**, using **7.960 ms of owner CPU**
+  inside that path. Ocean frame 620 compiles **113 blocks**, using **6.474 ms**.
+- Ocean frame 476 waits **4.882 ms** at a 2D fence, with a **2.869 ms** scanline-wait
+  delta. Frame 462 has **4.787 ms** fence wait and **3.930 ms** line-wait delta.
+  Fence post-to-return delay is only about **0.08 ms on average** in ocean;
+  much of the delay precedes completion notification.
+- Cliff frames 149 and 449 use **18.066 / 17.138 ms of engine CPU**, with no JIT
+  compilation or fence wait. Heavier-river frame 486 likewise uses **18.975 ms**
+  with neither cost. These require a separate active-execution profile.
+
+The same three categories existed in earlier diagnostics; the fresh capture
+confirms they remain relevant after r9. Evidence:
+`monomelon-r9-core-phase-20261112/{build-evidence.tar,clean-evidence.tar,results-clean.txt,analyze.nim}`.
+
+### Existing JIT options: retain defaults
+
+The installed r9 binary is also tested with literal optimization disabled,
+branch optimization disabled, and both disabled. Each uses private overrides
+and copied saves; normal launchers/defaults stay unchanged.
+
+Disabling branches, alone or with literals, changes captured video/PCM output
+in all five tested scenes. This is an output difference, not a determination
+of which mode is more accurate to hardware. Reject these variants under the
+preserve-output requirement without timing them. Disabling only literals matches
+all five 120-frame sequences, but two reversed 600-frame timing pairs after
+90 warm-up frames are slower:
+
+| Scene | Default / literals-off core ms | Throughput change |
+| --- | ---: | ---: |
+| Ocean | 13.6140 / 13.8246 | −1.523% |
+| Heavier river | 15.0408 / 15.3961 | −2.308% |
+
+No option change ships, and no additional full-player tests of these losing
+variants are needed. Evidence:
+`monomelon-r9-core-phase-20261112/{jit_options_device.sh,jit-options.log,jit-options-evidence.tar}`.
+
 ### Quotient reuse: private candidate, not selected
 
 Candidate `ed39fe00…` starts from r9 and tests the preceding perspective quotient
