@@ -196,6 +196,37 @@ This provides a repeatable baseline for short transition errors between the 17
 original screenshot references. Hashing runs are separate from timing tests.
 Evidence: `monomelon-replay-oracle-20261113/`, final archive `e92270fa…`.
 
+#### 2D fallback reason counts
+
+Diagnostic `db878b59…` keeps rendering policy unchanged and records only four
+frame clocks plus counters. All eleven native fixtures, nine game/FOSS output
+checks, 17 references and **all 4,910 video/PCM rows** match installed r11.
+Both instrumented player runs pass strict 4,910-frame interval/stat accounting.
+
+After 120 warm-up frames, both runs report identical relevant counts:
+
+| Observation | Count |
+| --- | ---: |
+| Frames with inline scanlines | 25 of 4,790 |
+| Inline scanlines | 2,903 |
+| Queued scanlines | 916,777 |
+| Inline lines caused solely by the dirty-wait threshold | 2,903 |
+| Capture/display-mode/no-worker fallback lines | 0 |
+| Actual capture calls, including early returns | 0 |
+| Open records consumed by OBJ-cache synchronization | 172 in 59 frames |
+
+The fifth dirty wait latches the rest of that frame onto the emulation thread.
+Completed frames 400/402/403 draw 70/115/147 of their 192 lines inline, each
+after five OBJ-cache waits. Frame 2880 draws 143 lines inline after five BG-cache
+waits. Capture is therefore **not the target for this recording**. These counts
+do not measure exclusive 2D CPU or promise a particular saving.
+
+Same-binary OFF/ON controls show measurable observer cost and variable audio
+events; instrumentation is not an optimization. The next private experiment tests
+higher dirty-wait limits while preserving every memory-coherence drain. No limit
+change is installed yet. Evidence: `monomelon-r11-2d-reasons-20261113/`, final
+archive `96b836ad…`, strict CSVs and separate audio/work summaries.
+
 ### Earlier r9 measurements
 
 **November 13, installed r9:** fresh 720-frame runs use the unchanged production
