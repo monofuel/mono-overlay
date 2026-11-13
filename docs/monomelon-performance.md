@@ -615,6 +615,49 @@ underruns under added stress. **The complete goal is still open.** This is an
 indirect stress test, not a direct measurement of uncapped work time. Neither
 the probe nor its artificial delays are part of shipped builds.
 
+### Renderer follow-ups against r8
+
+Short full-player CPU profiles point at the software renderer. Across all
+user-space threads, ocean spends 41.27% of sampled cycles in polygon scanlines,
+10.09% in texture lookup and 3.69% in the final scanline pass; heavier river gives
+26.90%, 7.05% and 4.41%. These percentages are aggregate CPU attribution, not
+exclusive frame time. The heavier river's emulation thread is also near 92% of
+one core. There is no evidence here that DDR bandwidth is saturated.
+
+The three 3D workers have uneven CPU use, but changing the existing band split
+does not help ocean. Against 96/160's 14.1785 ms core time, 80/144, 80/136 and
+64/128 take 15.3800, 15.3905 and 15.4464 ms; steady player underruns rise from one
+to three, four and seven. All output checks match. Keep 96/160; aggregate work
+balance alone does not predict this pipeline's performance.
+
+Two private source candidates retain all arithmetic and outputs:
+
+- Deferred perspective division: Z-buffered pixels compute the attribute factor
+  after depth acceptance; W-buffer depth still computes it first. This was
+  previously unhelpful for playback before later main-thread changes. Fresh
+  native pairs give ocean core **14.2217 to 13.6542 ms (+4.156%)**, with steady
+  underruns **4 to 0**; heavier river **15.0963 to 15.0094 ms (+0.579%)**,
+  underruns **0/0**. Two candidate heavy runs each record one overrun.
+- Last-texel cache: each polygon remembers its last integer S/T sample's raw
+  colour/alpha, with the same discarded fractional bits as the original sampler.
+  Polygon setup invalidates it; frame snapshots are immutable and bands have
+  private caches. Ocean core **14.1747 to 13.9597 ms (+1.540%)**, heavier river
+  **15.0532 to 14.9629 ms (+0.603%)**; both controls/candidates have zero steady
+  underruns. One candidate heavy run records an overrun.
+
+These are separate paired batches using copied saves, null audio and microphone
+disabled; do not add their gains. Both pass all four native game/four open-demo
+video/PCM comparisons. Focused interpolation tests compare over 675 million
+values per seed, and a broken preparation step is detected. Cached/uncached
+texture tests cover all formats, wrapping, fractional/signed boundaries and
+invalidation; that test also passes under ARM64 QEMU.
+
+The combined candidate passes the host suite and is being checked across all
+four states plus the heavier river. Neither change is installed or published
+as a source release yet. Normal r8 and the microphone-enabled player remain
+unchanged. Whole-pipeline headroom and representative manual acceptance remain
+separate requirements.
+
 ### r7 FIFO routing
 
 Engine [`397f7d4d`](https://github.com/monofuel/melonDS/commit/397f7d4d067ccc9e4e73a00128871422c5ed8fb0)
