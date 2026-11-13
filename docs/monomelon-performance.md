@@ -77,9 +77,12 @@ CPU duration despite positive wall duration and remain in the accounting.
 
 DMA diagnostics find roughly 4,445 ocean / 6,723 heavy-river geometry-FIFO DMA
 checks per warmed frame, with no matching channel enabled in these samples.
-This motivates a cached eligibility gate. Host and ARM64/QEMU lifecycle,
-enable/disable, state-load and DSi NDMA checks pass; native accuracy and timing
-comparisons are pending. It is not yet a measured speedup.
+The resulting cached eligibility gate passes native lifecycle, enable/disable,
+state-load, DSi NDMA and all nine output checks. Two reversed comparisons against
+fresh r10 give **−0.52% ocean / +1.25% heavy-river** throughput; production audio
+counts do not improve consistently. It remains private. Counting avoidable work
+alone does not establish a whole-pipeline gain; combined tests will compare
+with and without this gate. Evidence: `monomelon-fifo-dma-gate-20261113/`.
 Evidence: `monomelon-r9-clz-traffic-20261113/` and
 `monomelon-dma-traffic-20261113/`.
 
