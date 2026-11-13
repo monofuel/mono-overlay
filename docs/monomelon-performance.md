@@ -47,6 +47,7 @@ installed. Means below describe core processing, not complete player headroom.
 | NEON 4×4 matrix multiply, scalar overlap path | −0.08% | +1.17% | Ocean flat; player still has audio-buffer misses. |
 | Reuse completed helper interiors during next-frame seeding | +0.64% | +1.07% | Heavy player work/tails mixed; copyback still runs. |
 | r10 inline depth + matrix + seed reuse | +1.73% | +1.52% | Occasional production-player misses remain. |
+| r10 + lazy helper ownership, removing recurring copyback | +1.83% | +1.79% | Ocean player results improve; heavy misses remain variable. |
 
 Fresh unchanged r9 controls accompany all three comparisons. Against those
 controls, combined throughput improves 2.45% ocean / 1.86% heavy river.
@@ -56,21 +57,29 @@ Rebuild/profile variation affects tiny comparisons; the matrix microbenchmark's
 `monomelon-r9-band-seed-reuse-20261113/`,
 `monomelon-r10-matrix-seed-20261113/`.
 
-A separate lazy-copy candidate retains helper ownership until a transition
-requires canonical buffers. Its independent scalar-oracle, poisoned-boundary
-and save/load tests pass; native performance comparison is pending.
+The lazy-copy candidate retains helper ownership until a transition requires
+canonical buffers. Independent scalar-oracle, poisoned-boundary, save/load,
+nine native fixtures and all output comparisons pass. Against its matching
+fresh **r10** control, throughput improves 1.38% ocean / 1.61% heavy river.
+It remains experimental: heavy-river production underruns are 1/1 for installed
+r9 and 1/2 for the candidate. Evidence: `monomelon-lazy-band-copy-20261113/`.
 
 Scoped compilation diagnostics count real logical-immediate checks without
 changing emitted code. A warmed ocean burst has 113 blocks / 1,788 checks /
-5.130 ms backend CPU; heavy river has 239 / 1,173 / 5.784 ms. A matched counted
-CLZ implementation will test that cost directly; uninstrumented mean FPS alone
-has not established its benefit. Five individual records have zero recorded
+5.130 ms backend CPU; heavy river has 239 / 1,173 / 5.784 ms. Two reversed matched
+comparisons prove identical event identities, order, emission sizes/offsets and
+logical counters. The builtin CLZ reduces those ocean bursts from 5.03/5.12 to
+4.24/4.20 ms (16–18%) and heavy bursts from 5.68/5.67 to 5.04/4.96 ms (11–12%).
+These instrumented non-PGO results describe compilation CPU, not overall FPS.
+Evidence: `monomelon-r9-clz-traffic-fast-20261113/`.
+Five individual records in the original diagnostic have zero recorded
 CPU duration despite positive wall duration and remain in the accounting.
 
 DMA diagnostics find roughly 4,445 ocean / 6,723 heavy-river geometry-FIFO DMA
 checks per warmed frame, with no matching channel enabled in these samples.
-This motivates a cached eligibility gate, subject to complete enable/disable,
-reset, state-load and DSi-path coverage. It is not yet an implemented speedup.
+This motivates a cached eligibility gate. Host and ARM64/QEMU lifecycle,
+enable/disable, state-load and DSi NDMA checks pass; native accuracy and timing
+comparisons are pending. It is not yet a measured speedup.
 Evidence: `monomelon-r9-clz-traffic-20261113/` and
 `monomelon-dma-traffic-20261113/`.
 
