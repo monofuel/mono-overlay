@@ -8,6 +8,31 @@ old slot-2 measurements are not river measurements. Fresh measurements follow.
 
 ## Current four-state measurements
 
+**November 13, installed r9:** fresh 720-frame runs use the unchanged production
+player (`7b977dee…`) and separate V3 diagnostic runs, copied saves, null audio
+and microphone off. The production runs report zero underruns in all four
+saved states; the heavier moving-river fixture reports one. This does not verify
+physical audio or representative manual play.
+
+V3 gives 599 warmed periods per scene after 120 warm-up frames:
+
+| Scene | Modeled work mean / p95 ms | Periods above native budget | Production underruns |
+| --- | ---: | ---: | ---: |
+| Cliff | 14.9922 / 15.7762 | 6 / 599 | 0 |
+| River | 14.5337 / 15.9515 | 18 / 599 | 0 |
+| Inventory | 7.5942 / 8.0370 | 0 / 599 | 0 |
+| Ocean | 14.9395 / 17.3115 | 39 / 599 | 0 |
+| Heavier river | 15.8747 / 17.2754 | 41 / 599 | 1 |
+
+Each mean is below the 15.919 ms target, but individual long periods remain.
+The accounting model reconstructs actual intervals with zero residual; it is
+not an exact unpaced counterfactual and does not prove the complete 5% margin
+or smooth gameplay. Keep the goal open. Diagnostic ocean reports two underruns
+where its separate production run reports zero; these are different runs,
+not identical scheduling. Evidence: `monomelon-r9-full-pipeline-20261113/`.
+
+### Earlier r4 baseline
+
 The earlier r4 core is `7561e16dd677d7b28c92a1c512499eeaab62a7f191312deea08fac7bc541ef84`.
 Two 240-frame repeats per state/mode, reversing scene order on the second pass,
 give the following baseline. Automated playback uses copied saves, neutral
@@ -861,6 +886,40 @@ of all remaining slow frames.
 
 Evidence: `monomelon-r9-local-dispatch-20261112/{native-evidence.tar,results-*.txt}`
 and `pmu-evidence.tar`, with its analyzer/output under `pmu/`.
+
+### Texture blocks and resident registers: private, not selected
+
+Two r9-based candidates use fresh four-open-demo PGO and two reversed
+600-frame core comparisons, with separate 720-frame player traces:
+
+| Candidate | Ocean r9 / candidate ms | Heavier river r9 / candidate ms |
+| --- | ---: | ---: |
+| Scanline-local compressed texture block (`bf7a45f1…`) | 13.6292 / 13.7469 | 14.9878 / 15.3117 |
+| ARM64 resident R0/R1 pair (`a8cf8613…`) | 13.5719 / 13.8291 | 14.9923 / 15.4783 |
+
+The texture candidate keeps one aligned 4×4 packed block, palette metadata and
+four lazily decoded colors in a 24-byte scanline-local cache. No renderer fields
+or persistent invalidation state change. All eight ARM64/QEMU/native fixtures,
+roughly 18 million actual-sampler versus independent-r9 comparisons, and seven
+negative mutants pass their respective positive/negative expectations. A new
+independent full-frame harness adds textured polygons: all 826 complete renderer
+fingerprints match r9 under QEMU and natively. The older frame harness did not
+texture its polygons and would not cover this integration by itself.
+
+The resident-register candidate carries guest R0/R1 in native W19/W20 between
+blocks, synchronizing at dispatch/return, interpreter, helper and patched memory
+boundaries. Eight ARM64 fixtures pass under QEMU and natively; its new generated
+test covers unused middle blocks, conditional fallbacks, bank changes, literals,
+helpers and patched slow-memory trampolines. The fixture calls patched paths
+directly; it does not itself trigger signal recovery. Real game comparisons
+retain normal fast memory. Default allocator behavior also matches r9 across
+5,708,244 preparations, and a resident semantic model checks 100,000 chains.
+
+Both preserve video/PCM for all four states, heavier river and four open demos.
+Both are slower in both core scenes, with no consistent player-tail win: texture
+throughput changes −0.86%/−2.12%, resident pair −1.86%/−3.14%. Neither ships.
+Evidence: `monomelon-r9-{texture-block,resident-pair}-20261113/`, including
+build/native evidence archives and paired worktrace summaries.
 
 ### Inline depth tests: r10 source
 
