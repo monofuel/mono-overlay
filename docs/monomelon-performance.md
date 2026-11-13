@@ -87,9 +87,22 @@ two reversed 600-frame runs per scene after 90 warm-up frames.
 | Heavy river | 14.902818 | 14.934817 | 14.574580 | 14.738379 |
 
 FIFO gains **2.25% / 2.47%** heavy-river throughput against installed/fresh r11;
-ocean is **+0.49% / −0.94%**. It remains a whole-player candidate, not an installed
-improvement. Fog gains **1.12% / 1.33%** heavy throughput but loses **1.45%** ocean
-throughput against the fresh control; it is set aside. Neither is promoted.
+ocean is **+0.49% / −0.94%**. FIFO is selected for the next package after the
+moving-player checks below; installed r11 remains unchanged. Fog gains
+**1.12% / 1.33%** heavy throughput but loses **1.45%** ocean throughput against
+the fresh control; it is set aside.
+
+Two reversed moving-river repeats use the same fixed 50 ms audio adapter and
+paired GPU displays. A stricter load probe consumes 1/21 frame period of actual
+calling-thread CPU time in both pipeline stages; 120 calls consume 95.672 ms
+natively. Installed r11 has **1/0** ordinary warmed underruns and **4/3** with
+this load. FIFO has **zero warmed underruns and overruns in all four runs**.
+Each run retains all 4,910 video frames and 2,686,067 stereo PCM frames. This is
+bounded reserve evidence, not manual audio or complete four-state acceptance.
+
+The source is on fork masters: engine `ab394a2f…`, wrapper `ed9b7444…`.
+The 30 ms default-buffer check and fresh r12 package validation are pending.
+Evidence: `monomelon-cpu-reserve-20261113/`, archive `0e4ac1ff…`.
 
 Evidence: `monomelon-r11-cpu-scouts-20261113/`, strict `core-results.txt` and
 native archive `b8c6e2de…`. Installed core `e1fa23cd…`, fresh control `0a110c76…`,
