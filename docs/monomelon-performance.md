@@ -189,6 +189,13 @@ for height/mapping reasons. Per-frame reason counters are the next measurement;
 the profile alone cannot choose which guard to change. Evidence:
 `monomelon-r11-moving-owner-profile-20261113/`, archive `b6aadd36…`.
 
+Before changing that policy, a separate accuracy probe fingerprints every video
+frame and PCM block in the 4,910-frame recording. Two installed-r11 runs match
+all rows, including 5,372,134 captured `int16` samples; CSV SHA256 `52327f42…`.
+This provides a repeatable baseline for short transition errors between the 17
+original screenshot references. Hashing runs are separate from timing tests.
+Evidence: `monomelon-replay-oracle-20261113/`, final archive `e92270fa…`.
+
 ### Earlier r9 measurements
 
 **November 13, installed r9:** fresh 720-frame runs use the unchanged production
