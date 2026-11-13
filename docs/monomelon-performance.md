@@ -8,7 +8,39 @@ old slot-2 measurements are not river measurements. Fresh measurements follow.
 
 ## Current four-state measurements
 
-**November 13, installed r11:** core
+**November 13, installed r12:** core `86fa0eac…`, player `9a5adf79…`
+(mono-retro `7a7be6a`). The DS Plus Rocknix profile primes 50 ms of audio; other
+profiles retain 30 ms. Original saves and the tested r11 core/player fallback
+are preserved. Installed-package checks and all four normal-wrapper migrated
+state launches pass. R12 is the requested pause point; manual audio, touch and
+walking acceptance remains outstanding.
+
+All **sixteen** standard-scene runs (four states × control/loaded × two reversed
+repeats) have zero warmed underruns/overruns after 120 warm-up frames. Each runs
+720 frames with paired GPU displays and null audio. The load consumes 1/21 frame
+period of actual calling-thread CPU time in both pipeline stages; the native
+120-call budget test measures 95.672 ms. This is bounded reserve evidence.
+
+The 4,910-frame moving recording retains every video/PCM fingerprint. Ordinary
+repeats have zero warmed buffer events; loaded repeats have **one/zero
+underruns**, all overruns zero. The extra heavy fixture has two warmed underruns
+in one loaded repeat and zero events in its other three runs. These stress tails
+and physical audio acceptance remain unresolved.
+
+Separate reversed 600-frame core timings after 90 warm-up frames give:
+
+| Scene | Installed r11 ms | Packaged r12 ms | Throughput gain |
+| --- | ---: | ---: | ---: |
+| Ocean | 13.347326 | 13.342400 | 0.04% |
+| Heavy river | 14.833658 | 14.549115 | 1.96% |
+
+The package uses the same four open PGO demos, compiler flags and dependency
+versions. Evidence: `monomelon-package-r12-20261113/`, native archive
+`430403e1…`, pipeline archive `07fc78f6…`, deployment archive `014e5ffd…`.
+
+### Earlier r11 measurements
+
+**November 13, r11 baseline:** core
 `e1fa23cd2a0f080a2f84c102f0687f9ece8415937c1cae8899e2a9ec5d045b6c`.
 The public pinned package passes eleven native fixtures, five saved-scene and
 four FOSS video/PCM comparisons, installed-package checks, four migrated-state

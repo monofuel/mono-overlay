@@ -36,7 +36,36 @@ performance reference; melonDS remains our accuracy baseline.
 
 ## Current baseline
 
-**Installed: r11**, core SHA256
+**Installed: r12**, core SHA256
+`86fa0eacbdc25246c16dbb8feb5262b94917dc98829c371ab1ec308cc1e31b32`.
+The player is mono-retro `7a7be6a`, binary `9a5adf79…`, with the queued-audio
+accounting fix and 50 ms priming in the DS Plus Rocknix profile. Other profiles
+retain 30 ms. The 100 ms audio cap, kernel, clock policy and input mappings are
+unchanged.
+
+The normal menu uses `monomelon-r12-lost-in-blue`, with four migrated states and
+byte-identical copied SRAM. Original r11/r9 data is preserved. The tested
+`mono-retro-lost-in-blue-before-r12` fallback selects both the r11 core and old
+player with the original r11 saves. The prior r9 fallback is also retained.
+
+The published r12 package passes eleven native fixtures, five saved-scene and
+four FOSS output comparisons, and every video/PCM fingerprint in the 4,910-frame
+river recording. All four standard scenes have zero warmed buffer events in
+both reversed control and CPU-reserve runs. This probe consumes 1/21 frame period
+of actual calling-thread CPU time in each stage, with paired GPU video and null
+audio. The moving replay has zero ordinary-playback events; added-load repeats
+have one/zero underruns. The extra heavy fixture has two underruns in one loaded
+repeat. These remain bounded diagnostic results, not physical audio acceptance.
+
+Installed-package checks, four normal-wrapper state launches with the 50 ms
+profile, and the complete r11 rollback pass. **R12 is Monofuel's requested pause
+point.** Manual movement/touch/audio acceptance and investigation of the rare
+loaded stress events remain outstanding; the original objective is unchanged.
+Microphone investigation remains deferred to the separate PC test.
+
+### Earlier r11 baseline
+
+The r11 checkpoint used core SHA256
 `e1fa23cd2a0f080a2f84c102f0687f9ece8415937c1cae8899e2a9ec5d045b6c`.
 The normal launcher uses copied saves under `monomelon-r11-lost-in-blue`; the
 original r9 directory is unchanged, and `mono-retro-lost-in-blue-before-r11`
