@@ -270,10 +270,10 @@ Normal-player totals, including startup, are four **2/0 and 3/1**, versus 32
 physical audio or an audio fix. All guards/restoration checks pass. Evidence:
 `extended-final-evidence.tar`, SHA256 `531cc634…`, in the same experiment root.
 
-This supports revalidating a **constant-only** candidate: change the original
-budget from four to 32, with no experimental setting or member. Its fresh build,
-package, four-state margin and manual acceptance remain pending; the full
-100%+5% goal is not established by the transition savings.
+These results motivated a **constant-only** candidate: change the original
+budget from four to 32, with no experimental setting or member. Its independent
+build and validation results follow; transition savings alone do not establish
+the full 100%+5% goal.
 
 #### Constant-only build: shorter spikes, mixed overall results
 
@@ -303,10 +303,30 @@ candidate **0/0 and 0/0**. Normal-player totals, including startup, are installe
 not establish an audio fix. All strict 4,910-row, audio-footer, timing
 reconstruction and final binary/save/menu checks pass.
 
-The installed package remains unchanged while four-state and moving-input
-reserve checks evaluate this candidate. Public packaging and manual acceptance
-remain outstanding. Private evidence: `monomelon-r11-dirty-constant-20261113/`,
-native archive `1efe8751…`, full-player archive `b281fb2e…`.
+Reversed 720-frame reserve checks exclude 120 warm-up frames. All ten
+added-workload runs (four required states plus the heavy fixture, twice each)
+have zero warmed buffer events. Ordinary runs retain one ocean underrun and
+one heavy-fixture overrun in their second repeats. The other ordinary runs
+are clean. This preserves the distinction between stationary and moving tests.
+
+The full moving-input reserve check still fails:
+
+| Constant-32 probe | Warmed frames | Warmed underruns, repeats 1 / 2 | Warmed overruns, repeats 1 / 2 |
+| --- | ---: | ---: | ---: |
+| Control | 4,790 | 2 / 1 | 1 / 0 |
+| Extra 1/21 native frame-period CPU work per stage | 4,790 | 14 / 11 | 1 / 1 |
+
+**Not promoted.** Shorter transition spikes do not establish better overall
+playback, and this artifact does not meet the moving-input reserve target.
+The public source, ebuild pins and installed r11 remain unchanged. All original
+and live saves pass final checks; the launcher is restored after every batch.
+Twenty stationary start-frequency samples are 1.992 GHz, temperatures
+45.6–60.0°C; no clock policy is changed.
+
+Private evidence: `monomelon-r11-dirty-constant-20261113/`, native archive
+`1efe8751…`, full-player `b281fb2e…`, stationary reserve `5c937313…`, moving
+reserve `9d61ca71…`. All archives include post-cleanup guards. No physical-audio
+or manual-gameplay acceptance is inferred from silent tests.
 
 ### Earlier r9 measurements
 
