@@ -1126,6 +1126,48 @@ taken/fallthrough destination before designing any links. Instrumented timings
 are not throughput or headroom measurements.
 Evidence: `monomelon-r9-edge-eligibility-20261113/{native-evidence.tar,eligibility-summary.txt,analysis/}`.
 
+### Helper-buffer copies: measured optimization target
+
+A default-off diagnostic retains every existing seed and copyback operation.
+Separate verification runs compare helper lower-layer interiors before seeding;
+timing runs perform no comparison. Seven enabled/six disabled host fixtures,
+the retained 826-frame full-buffer oracle, eight ARM64/QEMU/native fixtures,
+five game video/PCM comparisons and four open demos pass.
+
+Each outdoor scene has 720 consecutive eligible comparisons with no mismatch.
+Inventory has none, because its 3D frames are identical. Two 720-frame player
+timing runs per water scene, aligned after 120 player frames, measure:
+
+| Scene | Seed CPU ms/frame, two runs | Copyback CPU ms/frame, two runs |
+| --- | ---: | ---: |
+| River | 0.2192 / 0.2134 | 0.5179 / 0.4962 |
+| Ocean | 0.1966 / 0.2108 | 0.4773 / 0.4561 |
+| Heavier river | 0.2162 / 0.1948 | 0.5105 / 0.5182 |
+
+Default bands copy 309,600 seed bytes and 600,624 copyback bytes each frame.
+After a completed same-bound banded frame, 297,216 seed bytes already match;
+the two boundary rows, all metadata and full copyback must remain. Reset,
+restart, helper/bounds changes and nonbanded paths invalidate this opportunity.
+A private reuse prototype is being tested. Section costs include instrumentation
+and are upper bounds on potential savings, not guaranteed recoverable frame time.
+This attribution build intentionally has no PGO; it is not a throughput comparison
+against installed r9. Evidence: `monomelon-r9-band-copy-profile-20261113/{native-evidence.tar,native-results.txt}`.
+
+### Integer geometry matrix experiment: isolated result only
+
+The r9 A55 build performs 4×4 matrix products with scalar integer multiply/add
+instructions. A private NEON version retains 64-bit modular sums, final shifts
+and a scalar fallback for overlapping inputs. An independent modular oracle
+checks 100,000 complete-storage cases, including partial overlap, extremes and
+unaligned vector loads, under QEMU and natively. Four reversed million-call
+native pairs give **127.25–127.37 ns scalar versus 60.67–62.00 ns NEON**, about
+**2.05–2.10×** for this routine, including the same test-driver overhead.
+
+That is not a whole-game speedup. The actual emulator integration passes seven
+host fixtures; its fresh four-open-demo-PGO build and native game comparison
+are still pending. No production code or installed binary is changed.
+Evidence: `monomelon-r9-matrix-audit-20261113/{native-evidence.tar,micro-results.txt,r9-matrix.asm}`.
+
 ### Inline depth tests: r10 source
 
 The packaged r9 ARM64 rasterizer retains 15 indirect depth-test call sites after
