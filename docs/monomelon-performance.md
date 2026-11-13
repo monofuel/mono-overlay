@@ -1071,8 +1071,7 @@ pairs after the first 120 frames number 36/2 in river, 0/5 in ocean and 1/32
 in heavier river. Atomic submission does not by itself prove simultaneous
 physical scanout. These counts do not track audio underruns, and delayed
 callback handling is not a measurement of when the display physically flipped.
-A separate default-off submission-phase guard is prepared for comparison;
-no benefit or production change is claimed yet.
+A separate default-off submission-phase guard is tested below.
 
 A third temporary CPU layout gives the emulation owner CPU0, primary 3D CPU1,
 main/middle 3D CPU2 and 2D/shortest 3D CPU3. Ocean modeled p95 improves from
@@ -1085,6 +1084,47 @@ diagnostic, not proof of the full-pipeline 5% margin.
 
 Evidence: `monomelon-drm-cadence-20261113/{native-evidence.tar,analysis/}` and
 `monomelon-r9-spread-affinity-20261113/{native-evidence.tar,work-results.txt}`.
+
+### Paired-phase guard: pairing improves, audio does not
+
+The private guard predicts each CRTC's next blank from validated monotonic
+events and requests one bounded sleep before a submission likely to straddle
+the pair. It changes no clocks, modes, buffers or queue depth. Host boundary,
+mocked callback/submission and lifetime tests pass. Two reversed 720-frame
+comparisons per scene use unchanged r9 and otherwise matching recorder players.
+
+| Scene | Control wide-phase pairs after warm-up | Guard wide-phase pairs after warm-up |
+| --- | ---: | ---: |
+| River | 0 / 6 | 1 / 0 |
+| Ocean | 3 / 23 | 1 / 0 |
+| Heavier river | 15 / 40 | 0 / 0 |
+
+All six controls have zero warmed audio events. The guard has one warmed
+overrun in ocean repeat 1, one in heavy repeat 1, and one underrun in heavy
+repeat 2. Requested-wait p95 is approximately 0.45 ms, but observed waits reach
+7.42 ms through scheduling; a bounded request is not a bounded elapsed delay.
+Keep this private: better paired timestamps do not justify degraded audio,
+prove simultaneous physical scanout or close the processing-headroom goal.
+All original saves/binaries remain unchanged and the normal menu is restored.
+Evidence: `monomelon-drm-phase-guard-20261113/{native-evidence.tar,native-results.txt,work-results.txt}`.
+
+### Direct guest-edge eligibility: measure before linking
+
+A diagnostic counts actual AArch64 dispatch outcomes without installing links.
+The first policy allows only already-published, same-mode unconditional immediate
+successors in ARM9 DS main RAM. Nine native generated-code/lifecycle fixtures,
+five game-scene video/PCM comparisons and four open demos pass. All five
+720-frame counter matrices validate their 128 unique rows and outcome sums.
+
+Ready-target coverage of actual ARM9 chained transitions is only **0.01838%
+cliff, 0.22260% river, 0.00012% menu, 0.01705% ocean and 0.01219% heavier river**.
+Self edges and mutation-disabled transitions are zero. This narrow policy does
+not warrant a linker implementation. Conditional exits, sequential fallthroughs
+and dynamic branches dominate; their exclusion buckets do not prove they are
+safe fixed successors. A broader bounded diagnostic will classify the actual
+taken/fallthrough destination before designing any links. Instrumented timings
+are not throughput or headroom measurements.
+Evidence: `monomelon-r9-edge-eligibility-20261113/{native-evidence.tar,eligibility-summary.txt,analysis/}`.
 
 ### Inline depth tests: r10 source
 
