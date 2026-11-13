@@ -805,6 +805,29 @@ have modeled work periods above the target; their timing does not establish
 the required headroom. Evidence:
 `monomelon-r9-register-plan{,-view}-20261112/{native-evidence.tar,results-*.txt}`.
 
+### Smaller JIT candidates: private, not selected
+
+Two further r9 candidates preserve video/PCM for the four current states,
+heavier river and four open demos. Both use fresh four-open-demo PGO and two
+reversed 600-frame core comparisons, with separate 720-frame player runs:
+
+| Candidate | Ocean r9/candidate ms | Heavier river r9/candidate ms |
+| --- | ---: | ---: |
+| ARM64 paired exit/flush stores (`ee4f2133…`) | 13.5907 / 13.6948 | 15.0314 / 15.1665 |
+| Compute eviction ranks only under pressure (`75882e57…`) | 13.5719 / 13.7345 | 15.0045 / 15.2527 |
+
+Paired stores pass 524,288 generated ARM64 executions under QEMU and natively,
+checking CPU bytes, guards, flags and cache metadata; dispatch tests also pass.
+Lazy ranking preserves cache layout and matches 5,708,244 preparations and
+19,919,229 allocation actions at the real 15/7/8-register capacities. All six
+host fixtures pass for both, and deliberate test mutants are rejected.
+
+Neither candidate produces a repeatable timing benefit. Player work tails remain
+above the target, so both are left uninstalled. Smaller emitted code or less
+source-level bookkeeping alone is insufficient evidence of a performance win.
+Evidence: `monomelon-r9-{paired-spills,lazy-ranking}-20261112/`, including
+`build-evidence.tar`, `native-evidence.tar` and `results-*.txt`.
+
 ### r8 clipping fast acceptance
 
 Engine [`1b9c2121`](https://github.com/monofuel/melonDS/commit/1b9c2121492f26709f29d709c1d43de8012e6d56)
