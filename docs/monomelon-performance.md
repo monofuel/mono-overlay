@@ -986,6 +986,16 @@ mixed. The lower diagnostic work time does not establish better delivered
 cadence or clean audio; leave this private while attributing the audio events.
 Evidence: `monomelon-early-ready-20261113/{native-evidence.tar,early-analysis.txt,results-v3-*.txt}`.
 
+A follow-up V4 observer records only counter changes after the main audio pump
+and after submission, with bounded storage and no PCM retention or per-frame I/O.
+All eight 720-frame traces are complete and their event totals match the final
+audio counters. After the 120-frame warm-up, ocean control has 1/2 underruns
+(plus one overrun in repeat 2), while early collection has none. However,
+heavier-river control has no warmed events in either run; early collection has
+an overrun in both, plus three warmed underruns in repeat 2. Thus the mixed
+audio result is not only startup behavior. Retain the unchanged production
+player. Evidence: `monomelon-early-ready-20261113/audio-events-v4/{native-evidence.tar,event-results.txt}`.
+
 ### A55 JIT code-cache maintenance: private core candidate
 
 The imported emitter conservatively cleans and invalidates written code with
