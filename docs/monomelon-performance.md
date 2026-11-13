@@ -828,6 +828,40 @@ source-level bookkeeping alone is insufficient evidence of a performance win.
 Evidence: `monomelon-r9-{paired-spills,lazy-ranking}-20261112/`, including
 `build-evidence.tar`, `native-evidence.tar` and `results-*.txt`.
 
+### Local dispatch jump sites: private, not selected
+
+R9 already chains compiled blocks through a shared lookup tail. Candidate
+`1f0f03b8…` tests local final jump sites: each block calls the shared lookup,
+then jumps to its returned target. The lookup retains the cycle/deadline,
+stop, region and fresh-entry tag checks. This adds four bytes per exit and one
+executed instruction per successful transition; it does not cache target pointers.
+
+All seven generated/native ARM64 fixtures pass, including alternating targets,
+ARM/Thumb transitions, helpers and conditional exits. Video/PCM matches r9 for
+the four current states, heavier river and four open demos. Two reversed
+600-frame core pairs give:
+
+| Scene | R9 / candidate ms | Candidate throughput change |
+| --- | ---: | ---: |
+| Ocean | 13.5766 / 13.8828 | −2.21% |
+| Heavier river | 15.0343 / 15.2286 | −1.28% |
+
+Separate 720-frame player comparisons show no consistent work-tail improvement.
+Fewer null-backend underruns do not establish clean physical audio or outweigh
+the slower measured work. R9 stays installed.
+
+A subsequent eight-second per-thread PMU comparison uses the production player
+after two seconds of warm-up, with no concurrent transfer and all counters
+running throughout. Emulation-thread branch misses increase from
+11.190 to 11.715 MPKI in ocean and 11.829 to 12.153 in heavier river. Instruction
+refills decrease slightly, but IPC falls from 0.507 to 0.503 and 0.531 to 0.524.
+This candidate does not deliver the proposed branch-prediction benefit on this
+workload. Counters diagnose this experiment; they do not isolate a unique cause
+of all remaining slow frames.
+
+Evidence: `monomelon-r9-local-dispatch-20261112/{native-evidence.tar,results-*.txt}`
+and `pmu-evidence.tar`, with its analyzer/output under `pmu/`.
+
 ### Inline depth tests: r10 source
 
 The packaged r9 ARM64 rasterizer retains 15 indirect depth-test call sites after
