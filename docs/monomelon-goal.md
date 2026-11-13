@@ -74,6 +74,15 @@ checks. Its fresh package has mixed performance: heavy-river player tails improv
 slightly, while the uncapped mean gain does not repeat. It remains uninstalled;
 new JIT control-flow work is being tested against the retained r9 baseline.
 
+R11's selected source combines retained software helper buffers, exact NEON
+matrix multiplication and faster logical-immediate classification during JIT
+compilation. Its prototype gains 2.48% ocean / 1.94% heavy-river core throughput
+in a direct r9 comparison. Both reversed normal/added-delay runs in all four
+standard states have zero warmed audio-buffer events; the extra heavy fixture
+still exposes stressed events. This is a bounded stress result, not full goal
+acceptance. The public pinned package is building and undergoing validation;
+r9 remains installed, and representative gameplay/physical audio are pending.
+
 Before this upgrade, Monofuel reported cliff/menu felt full speed while
 river/ocean water effects caused noticeable slowdowns. Earlier r5 measurements
 of these four states were:

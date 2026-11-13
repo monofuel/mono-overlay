@@ -56,6 +56,14 @@ compiler flags, dependencies and four open PGO demos. The fresh package, eight
 ARM64 fixtures and native video/PCM comparisons pass. Packaged performance is
 mixed, so r9 remains installed while further CPU work is tested.
 
+Revision `1.4.0-r11` retains completed software 3D helper buffers between frames,
+restoring canonical storage on transitions. It enables exact AArch64 NEON matrix
+multiplication with the original scalar behavior for overlapping inputs, and
+uses the compiler's leading-zero operation during ARM64 JIT emission. Compiler
+flags, dependency versions and open PGO inputs remain unchanged. Its selected
+prototype passes all four saved scenes with an added-delay headroom probe;
+the fresh public package is undergoing native validation before deployment.
+
 See [tweaks and measured performance](monomelon-performance.md) for each
 optimization's contribution and the Lost in Blue comparison on the RG DS Plus.
 

@@ -72,9 +72,16 @@ They use fresh open-demo PGO with verified full source manifests and actual
 NEON/CLZ instruction checks. In the direct comparison, adding DMA eligibility
 gains 0.89% ocean / 1.22% heavy over the three-part build. Production ocean
 underruns are 0/0 for three-part and 1/1 for four-part; heavy is 1/1 versus 2/1.
-The four-part heavy V3 modeled mean/p95 improves to 15.45/16.28 and15.56/16.39 ms,
+The four-part heavy V3 modeled mean/p95 improves to 15.45/16.28 and 15.56/16.39 ms,
 but this remains a work model rather than complete headroom proof. Warmed
-normal/tax comparisons across all states are pending. Neither build is installed.
+normal/tax comparisons select the three-part build: both reversed repeats in all
+four standard scenes have zero warmed underruns/overruns, with or without
+1/21 frame-period CPU work added to each pipeline stage. The extra heavy fixture
+still has taxed underruns 1/0 and overruns 1/1. The four-part build has taxed ocean
+underruns 3/0 and heavy 0/3, so its small processing advantage does not justify
+the DMA change. These are bounded silent stress tests, not complete gameplay or
+uncapped 105% capacity proof. The selected source is published for r11; its fresh
+public package's native validation remains pending. Installed r9 is unchanged.
 Evidence: `monomelon-cpu-stack-comparison-20261113/`.
 
 Scoped compilation diagnostics count real logical-immediate checks without
