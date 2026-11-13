@@ -828,6 +828,74 @@ source-level bookkeeping alone is insufficient evidence of a performance win.
 Evidence: `monomelon-r9-{paired-spills,lazy-ranking}-20261112/`, including
 `build-evidence.tar`, `native-evidence.tar` and `results-*.txt`.
 
+### Inline depth tests: private candidate
+
+The packaged r9 ARM64 rasterizer retains 15 indirect depth-test call sites after
+compiler transformations. Candidate `892dd4b0…` replaces the four selected
+functions with one small inline predicate, preserving all original call positions
+in regular and shadow scanlines. Tolerance and facing are selected once per row;
+there are no new renderer fields or duplicated whole-scanline specializations.
+The target regular function shrinks from 28,104 to 27,180 bytes and has no
+remaining indirect calls.
+
+All six host fixtures pass. The actual predicate matches the original functions
+in 16,544,256 boundary, random and signed-extreme comparisons; a tolerance mutant
+fails. Separately linked untouched-r9 and candidate renderers match 826 complete
+frame fingerprints, including both buffer layers, stencil and shadow history.
+The predicate and frame comparisons also pass under ARM64 QEMU and natively.
+All four current states, heavier river and four open demos match video/PCM.
+
+Fresh four-open-demo PGO and 600-frame core runs after 90 warm-up frames give:
+
+| Scene | Paired comparisons | R9/candidate core ms |
+| --- | ---: | ---: |
+| Cliff | 1 | 14.3331 / 14.2382 |
+| River | 1 | 13.9367 / 13.6575 |
+| Menu | 1 | 7.1010 / 6.9352 |
+| Ocean | 3 | 13.6771 / 13.6358 |
+| Heavier river | 3 | 15.1028 / 14.9211 |
+
+Heavier river improves in all three core comparisons, about 1.22% overall;
+ocean's small aggregate change has mixed signs. Corresponding 720-frame player
+comparisons show a modest heavy-river improvement, while ocean's means/tails
+vary. Long CPU/JIT and renderer-wait periods remain. This is a candidate for a
+further trial, not proof of sustained playback or the required 5% margin.
+It remains uninstalled. Evidence: `monomelon-r9-inline-depth-20261112/`, including
+`build-evidence.tar`, `native-evidence.tar`, `followup-evidence.tar` and
+`results-*.txt`.
+
+### Packed blending and unrolling: private, not selected
+
+Packed-blend candidate `d8d1a741…` evaluates red/blue in separate 16-bit integer
+lanes and green separately. Five-bit source alpha bounds each weighted channel
+sum to 2,016, preventing lane carry. Transparent destinations, disabled blending,
+destination alpha and unused-bit masking retain their original behavior. ARM64
+uses two multiply/two multiply-add instructions rather than three of each.
+
+The six host fixtures, 28,582,912 actual-body/reference comparisons and two
+deliberate mutants validate the arithmetic. All 826 original-r9 frame fingerprints
+match under QEMU and natively; game/open-demo video/PCM checks also pass. Two
+reversed core pairs are essentially flat at ocean and mixed at heavier river;
+player timing provides no consistent overall win.
+
+A separate GNU source-file-only experiment disables loop unrolling and peeling
+for `GPU3D_Soft.cpp` during both PGO stages. Target option inspection and actual
+commands confirm both flags, with existing arithmetic/vectorization flags kept.
+The regular function does **not** shrink: 28,104 becomes 28,188 bytes, still with
+15 indirect sites. Host fixtures and independent ARM64/native frame/video/PCM
+checks pass, but both reversed core pairs are slower.
+
+| Candidate | Ocean r9/candidate ms | Heavier river r9/candidate ms |
+| --- | ---: | ---: |
+| Packed blend | 13.6945 / 13.7062 | 15.1678 / 15.1176 |
+| No unrolling/peeling (`7877cb1f…`) | 13.6106 / 13.8235 | 14.9192 / 15.0925 |
+
+Neither ships. Fewer arithmetic operations or disabling an optimization does not
+establish an end-to-end benefit. Evidence:
+`monomelon-r9-{packed-blend,no-unroll}-20261112/`, including build/native evidence
+archives and paired worktrace summaries. Per-thread instruction/cache counters
+are a separate diagnostic; code size alone does not prove cache thrashing.
+
 ### r8 clipping fast acceptance
 
 Engine [`1b9c2121`](https://github.com/monofuel/melonDS/commit/1b9c2121492f26709f29d709c1d43de8012e6d56)
