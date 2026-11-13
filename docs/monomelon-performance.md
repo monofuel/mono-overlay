@@ -227,6 +227,36 @@ higher dirty-wait limits while preserving every memory-coherence drain. No limit
 change is installed yet. Evidence: `monomelon-r11-2d-reasons-20261113/`, final
 archive `96b836ad…`, strict CSVs and separate audio/work summaries.
 
+#### Higher dirty-wait limit: initial scout
+
+Private core `b3669c72…` exposes a fixed per-renderer test limit; the default
+remains four. No counters/timers are added, and all original coherence drains
+and live-memory guards remain. Limits 4/8/16/32/192 each pass five saved-scene
+and four FOSS output comparisons plus **all 4,910 video/PCM fingerprints**.
+All eleven native fixtures pass. This test interface is not intended to ship.
+
+Two reversed 900-frame player passes show consistent transition CPU reductions
+at limit 32, compared with four in the **same binary**:
+
+| Completed frame | Limit 4 owner CPU, repeat 1 / 2 | Limit 32 owner CPU, repeat 1 / 2 |
+| --- | ---: | ---: |
+| 398 | 25.804 / 25.548 ms | 23.431 / 23.293 ms |
+| 402 | 26.484 / 26.895 ms | 24.477 / 24.337 ms |
+| 403 | 18.268 / 18.420 ms | 15.428 / 15.118 ms |
+
+Frame 402's full core-service time also falls 1.27/2.43 ms. These are transition
+savings, **not a general game-FPS improvement**. Modeled mean work stays nearly
+flat: four gives 11.272/11.340 ms versus 32 at 11.300/11.241 ms; p99 and audio
+remain mixed. Limits 32 and 192 are close on the selected CPU tails. The scout
+does not record their actual fence counts.
+
+Limit 32 is selected for the next confirmation, not promotion: full 4,910-frame
+4/32/32/4 comparisons with both the timing and normal players, including the
+unseen BG-heavy frame 2880. Four-state margin and manual acceptance remain
+required. Frequency samples are all 1.992 GHz, temperatures 51.9–53.8°C, with no
+policy changes. Evidence: `monomelon-r11-dirty-limit-20261113/`, scout final
+archive `ee1f643b…`; installed r11 remains unchanged.
+
 ### Earlier r9 measurements
 
 **November 13, installed r9:** fresh 720-frame runs use the unchanged production
