@@ -587,8 +587,29 @@ deferred-only versus combined core times of **13.6595/13.7610 ms** for ocean and
 **15.0038/15.0422 ms** for heavier river. The last pair reverses direction, and
 there is no demonstrated incremental win from the cache. Keep the simpler path.
 
-The fresh public-source r9 package is building and is **not installed yet**.
-R8 and its saves/rollback remain intact. The full goal is still open.
+The fresh public-source r9 package is **installed**, core SHA256
+`1e2bdd76fe1df89931ad94fe1c38d3340289a32cf6944e2c1eff71a63a33ec9a`.
+All four native game and four open-demo video/PCM comparisons match r8. Four
+normal-player smoke tests and an explicit r8 rollback smoke pass. Saves are
+migrated into `monomelon-r9-lost-in-blue`; all original/live r8 saves, both
+microphone-enabled player binaries and the upstream core remain unchanged.
+
+Post-install checks run 600 frames per scene, with 90 warm-up frames before
+core timing. Player measurements include startup, normal pacing and final
+presentation, using paired GPU displays, null audio and microphone disabled:
+
+| Scene | Core ms/frame | Core capacity | Player loop ms | Audio underruns / overruns |
+| --- | ---: | ---: | ---: | ---: |
+| Cliff | 14.1733 | 117.934% | 10,097 | 0 / 0 |
+| River | 13.7813 | 121.289% | 10,093 | 0 / 0 |
+| Inventory | 6.9743 | 239.668% | 10,030 | 0 / 0 |
+| Ocean | 13.5324 | 123.519% | 10,097 | 1 / 1 |
+| Heavier river | 14.9731 | 111.634% | 10,152 | 5 / 1 |
+
+These are not warmed-only player results, physical audio acceptance or proof
+of 105% whole-pipeline capacity. Original/save/binary integrity checks pass and
+the normal launcher is restored. The full goal remains open. Evidence:
+`monomelon-package-r9-20261112/{before-r9-backup.tar,deployment-evidence.tar,post-install.log}`.
 
 ### r8 clipping fast acceptance
 
@@ -688,9 +709,9 @@ The combined candidate passes the host suite and all native output checks.
 Two full four-state-plus-heavy pairs improve ocean core throughput 3.315% and
 heavy 1.220% against their r8 control, with zero candidate steady underruns.
 A subsequent direct comparison with deferred-only does not justify the extra
-cache, so it stays private. Deferred-only is published as r9 source above;
-the package is still building. Normal r8 and the microphone-enabled player remain
-unchanged. Whole-pipeline headroom and manual acceptance remain separate requirements.
+cache, so it stays private. Deferred-only is installed as r9 above; the
+microphone-enabled player remains unchanged. Whole-pipeline headroom and manual
+acceptance remain separate requirements.
 
 ### r7 FIFO routing
 

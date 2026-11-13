@@ -43,18 +43,19 @@ The current test set, updated during manual testing on November 12, is:
 - Slot 3: inventory/menu, the easy control.
 - Slot 4: ocean; new.
 
-**Installed: r8**, core SHA256
-`a24ef7fc353c18bf8a69f6277c6345b724ae829a47086703c7d112a575f3a529`.
+**Installed: r9**, core SHA256
+`1e2bdd76fe1df89931ad94fe1c38d3340289a32cf6944e2c1eff71a63a33ec9a`.
 All four states are migrated into separate save copies, with original saves and
-an explicit r6 core/launcher rollback retained. The microphone-enabled player
+an explicit r8 core/launcher rollback retained. The microphone-enabled player
 includes Windy's render-ahead presenter; the audio-scheduling prototypes remain
 uninstalled.
-R8 adds early FIFO routing and fast acceptance of polygons already inside the
-view volume. The source candidate improves heavy-river core throughput about
-3.09% over r6 in a three-way comparison, with fewer audio underruns. The public
-package passes all eight native output comparisons, four installed player smokes
-and the rollback check. See [r8 evidence](monomelon-performance.md#r8-clipping-fast-acceptance).
-Manual r8 acceptance is pending. A private added-delay stress probe passes cliff,
+R9 retains r8's FIFO/clipping improvements and defers perspective division until
+a Z-buffered pixel passes its depth test. The fresh public package passes all
+eight native output comparisons, four installed player smokes and the r8
+rollback check. Its 600-frame follow-ups have zero underruns in cliff/river/menu,
+one in ocean and five in the heavier moving-river fixture, including startup.
+See [r9 evidence](monomelon-performance.md#r9-deferred-perspective-factors).
+Manual r9 acceptance is pending. An earlier private added-delay stress probe passes cliff,
 river and inventory but still exposes ocean/heavier-river underruns; the extra
 5% whole-pipeline headroom remains unproven. Its artificial delays are not shipped.
 
