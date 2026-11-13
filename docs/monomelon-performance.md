@@ -1022,6 +1022,70 @@ are also mixed. The microbenchmark win is insufficient to establish an overall
 promotion; this core remains private and uninstalled. Evidence:
 `monomelon-r9-a55-cache-20261113/{micro-native-evidence.tar,native-evidence.tar,results-summary.txt,results-*.txt}`.
 
+### Emitter CLZ and fresh-build calibration: private, not selected
+
+The r9 AArch64 emitter's 64-bit leading-zero loop compiles into a 2,644-byte
+logical-immediate classifier. A four-line GCC/Clang builtin substitution retains
+zero → 64 and all other-width/compiler fallbacks, shrinking it to 292 bytes.
+More than two million helper values, all legal logical immediates and 826,356
+emission cases pass; all 12,630,612 generated code bytes match the original.
+Native logical-immediate classification drops from roughly 313 to 27 ns per
+call. This is a compilation microbenchmark, not a game-frame speedup.
+
+The candidate passes eight ARM64/QEMU and native fixtures, five game-scene
+video/PCM comparisons and four open demos. However, a fresh **unchanged r9**
+build also changes unrelated function inlining. All builds identify the same
+GCC 16.2.1 revision and use the same four open PGO demos; the exact cause of
+the profile/build variation is unresolved. Compare against this fresh control
+before attributing small whole-game differences to the source patch alone.
+
+Three rotated 600-frame uncapped comparisons after 90 warm-up frames give:
+
+| Core | Ocean mean ms | Heavier-river mean ms |
+| --- | ---: | ---: |
+| Installed r9 | 13.6225 | 14.9067 |
+| Fresh unchanged r9 | 13.6525 | 15.1322 |
+| Fresh r9 + CLZ | 13.7277 | 15.2401 |
+
+All nine correctness comparisons pass for the fresh control too. Separate
+720-frame runs use the same production-style instrumented player for every
+core; audio counts vary and do not establish a repeatable CLZ win. Keep the
+installed core. These controls qualify small earlier rebuilt-core comparisons;
+they do not negate independently demonstrated accuracy or large/manual gains.
+Evidence: `monomelon-r9-emitter-clz-20261113/{native-evidence.tar,elf-audit/report.txt}`
+and `monomelon-overnight-20261113/{control-native-evidence.tar,control-results.txt}`.
+
+### Actual display cadence and another affinity layout
+
+A bounded private recorder measures paired atomic ioctls, per-CRTC sequence
+and monotonic kernel timestamps, and callback arrival. Six 720-frame native
+runs validate without overflow. Both displays report about **60.171 Hz**
+(median period **16.619 ms**), versus the game's **59.8261 Hz**. The expected
+repeat beat is approximately **2.90 seconds**. This can affect presentation
+even when emulation finishes promptly; it does not explain every hitch or
+prove an audio fault. No display mode or clock is changed.
+
+Paired kernel event timestamps usually differ by approximately **−0.866 ms**,
+but sometimes differ by **+15.77 ms**, one display cycle wider. Wide-phase
+pairs after the first 120 frames number 36/2 in river, 0/5 in ocean and 1/32
+in heavier river. Atomic submission does not by itself prove simultaneous
+physical scanout. These counts do not track audio underruns, and delayed
+callback handling is not a measurement of when the display physically flipped.
+A separate default-off submission-phase guard is prepared for comparison;
+no benefit or production change is claimed yet.
+
+A third temporary CPU layout gives the emulation owner CPU0, primary 3D CPU1,
+main/middle 3D CPU2 and 2D/shortest 3D CPU3. Ocean modeled p95 improves from
+17.99/18.12 to 15.36/15.36 ms, but heavy-river mean worsens from 16.00/15.92
+to 16.37/16.12 ms. Ocean underruns are 10/8 versus 8/11; heavy-river 5/4
+versus 6/6, with candidate overruns in both heavy runs. Reject promotion.
+Transfers finish more than five seconds before the first run; all original
+save/binary checks and menu restoration pass. The work model remains a
+diagnostic, not proof of the full-pipeline 5% margin.
+
+Evidence: `monomelon-drm-cadence-20261113/{native-evidence.tar,analysis/}` and
+`monomelon-r9-spread-affinity-20261113/{native-evidence.tar,work-results.txt}`.
+
 ### Inline depth tests: r10 source
 
 The packaged r9 ARM64 rasterizer retains 15 indirect depth-test call sites after
